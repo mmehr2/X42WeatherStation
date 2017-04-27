@@ -1,0 +1,114 @@
+/*
+    assignment 2
+    CSS support file
+    UCSCx Spring 2017
+    Gil Garcia, Michael L. Mehr
+    Color scheme inspiration from: #24 from https://designschool.canva.com/blog/website-color-schemes/
+    Color elements: Deep purple (6E3667), Electric lime (88D317), White (fff), and Light Blue (4da6ff)
+*/
+body {
+    background-color:#6E3667;
+    color:#88D317;
+    font-family: verdana, helvetica, arial, sans-serif;
+}
+
+h1 {
+    color:#fff;
+}
+
+.datatable {
+    border: 3px solid #4da6ff;
+}
+
+.dataheadrow {
+    background-color:#4da6ff;
+    color:#88D317;
+    font-weight:bold;
+}
+
+.dataheadrow td {
+    width: 100px;
+    padding: 10px 5px;
+    text-align: center;
+}
+
+.datarow {
+    color:#88D317;
+}
+
+.datarow td {
+    padding: 5px;
+    text-align: center;
+}
+
+/*
+    Tooltip code taken from W3Schools HowTo Tooltip Tutorial
+    https://www.w3schools.com/howto/howto_css_tooltip.asp
+*/
+.tooltip {
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dotted black;
+}
+
+.tooltip .tooltiptext {
+    visibility: hidden;
+    width: 120px;
+    background-color: #555;
+    color: #fff;
+    text-align: center;
+    border-radius: 6px;
+    padding: 5px 0;
+    position: absolute;
+    z-index: 1;
+    bottom: 125%;
+    left: 50%;
+    margin-left: -60px;
+    opacity: 0;
+    transition: opacity 1s;
+}
+
+.tooltip .tooltiptext::after {
+    content: "";
+    position: absolute;
+    top: 100%;
+    left: 50%;
+    margin-left: -5px;
+    border-width: 5px;
+    border-style: solid;
+    border-color: #555 transparent transparent transparent;
+}
+
+.tooltip:hover .tooltiptext {
+    visibility: visible;
+    opacity: 1;
+}
+
+
+/*
+    Alert button code adapted from W3Schools HowTo Alert Button Tutorial
+    https://www.w3schools.com/howto/howto_css_alert_buttons.asp
+*/
+.btn {
+    border: 3px solid #88D317; /* MLM- re-added borders - OK can't decide. Next line supersedes this. */
+    border: none; /* Remove borders */
+    color: #fff; /* Add a text color */
+    padding: 14px 28px; /* Add some padding */
+    cursor: pointer; /* Add a pointer cursor on mouse-over */
+    font-size: 150%; /* MLM: make this button bigger */
+}
+
+.info {background-color: #2196F3;} /* Blue */
+.info:hover {background: #0b7dda;}
+
+/*
+    Status line formatting by MLM
+*/
+.status {
+    font-size: 150%;
+    color:#88D317;
+}
+
+footer {
+    font-size: 75%;
+}
