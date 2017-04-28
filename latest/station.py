@@ -30,8 +30,8 @@ sensor_data = [
 # This could also eventually be considered to be somewhat defined by the data gathering module as well.
 column_descriptions = [ 
     {"name": "Temperature", "tip": "Units: deg.F"}, 
-    {"name": "Humidity", "tip": "Units: inHg"}, 
-    {"name": "Pressure", "tip": "Units: %"}, 
+    {"name": "Pressure", "tip": "Units: inHg"}, 
+    {"name": "Humidity", "tip": "Units: %"}, 
     {"name": "Timestamp", "tip": "Time taken (local)"}, 
 ]
 
