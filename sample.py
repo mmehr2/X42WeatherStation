@@ -40,9 +40,16 @@ import datetime
 import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)
 
+# From Lesson 02 (RGB LED with PWM)
+# NOTE: Pin numbers have been modified for BCM mode
+R = 17
+G = 18
+B = 27 # for later model Pi's only, else 21
+# See discussion here: https://raspberrypi.stackexchange.com/questions/12966/what-is-the-difference-between-board-and-bcm-for-gpio-pin-numbering
+init_color = 0xf0ff00
+
 # From Lesson 20 (photoresistor)
 import PCF8591 as ADC
-adc_pin = 17
 
 # From Lesson 28 (humiture which is DHT-11)
 import Adafruit_DHT as DHT
@@ -51,9 +58,10 @@ humiture_pin = 23 # pin number in BCM mode
 
 # From Lesson 30 (LCD1602 display)
 import LCD1602 as LCD
+# No pin numbers needed; this is I2C
 
 # From Lesson 31 (barometer)
-import Adafruit_BMP.BMP085 as BMP085
+import Adafruit_BMP.BMP085 as BMP
 # No pin numbers needed; this is I2C
 
 data_filename = "sensors.dat"
@@ -61,12 +69,11 @@ data_filename = "sensors.dat"
 def setupLDR():
     ''' Initialization for LDR hardware input '''
     ADC.setup(0x48)
-    GPIO.setup(adc_pin, GPIO.IN)
 
 def setupBarometer():
     ''' Init the barometer chip BMP-180 '''
     global barometer
-    barometer = BMP085.BMP085()
+    barometer = BMP.BMP085()
 
 def setupHumiture():
     ''' Init the humidity/temperature (humiture) chip DHT-11 '''
@@ -79,12 +86,60 @@ def setupLCD():
     LCD.write(0, 0, "Weather Station")
     LCD.write(1, 1, "Setup...")
 
+def setupLED(Rpin, Gpin, Bpin):
+    global ledpins
+    global p_R, p_G, p_B
+    ledpins = {'pin_R': Rpin, 'pin_G': Gpin, 'pin_B': Bpin}
+    for i in ledpins:
+        GPIO.setup(ledpins[i], GPIO.OUT)   # Set pins' mode is output
+        GPIO.output(ledpins[i], GPIO.HIGH) # Set pins to high(+3.3V) to off led
+    
+    # set Frequecy to 2KHz (5kHz blue)
+    p_R = GPIO.PWM(ledpins['pin_R'], 2000)
+    p_G = GPIO.PWM(ledpins['pin_G'], 2000)
+    p_B = GPIO.PWM(ledpins['pin_B'], 2000)
+    
+    # Initial duty Cycle = 0(leds off)
+    p_R.start(100)
+    p_G.start(100)
+    p_B.start(100)
+
+def map(x, in_min, in_max, out_min, out_max):
+	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
+
+def off():
+    for i in ledpins:
+        GPIO.output(ledpins[i], GPIO.HIGH)    # Turn off all leds
+
+def setColor(col):   # For example : col = 0x112233
+    ''' Send hex color to LED '''
+    R_val = (col & 0xff0000) >> 16
+    G_val = (col & 0x00ff00) >> 8
+    B_val = (col & 0x0000ff) >> 0
+    
+    R_val = map(R_val, 0, 255, 0, 100)
+    G_val = map(G_val, 0, 255, 0, 100)
+    B_val = map(B_val, 0, 255, 0, 100)
+    
+    p_R.ChangeDutyCycle(100-R_val)     # Change duty cycle
+    p_G.ChangeDutyCycle(100-G_val)
+    p_B.ChangeDutyCycle(100-B_val)
+
 def initialize():
     ''' Initialize all the hardware used '''
     setupLCD()
+    setupLED(R, G, B)
+    setColor(init_color)
     setupLDR()
     setupBarometer()
     setupHumiture()
+
+def destroy():
+    p_R.stop()
+    p_G.stop()
+    p_B.stop()
+    off()
+    GPIO.cleanup()
 
 def sampleBarometer():
     ''' Return BMP-180 temp *F and press inHg as float tuple (T,P) '''
@@ -155,6 +210,7 @@ def do_sample():
 def main():
     initialize()
     do_sample()
+    destroy()
 
 main()
     
