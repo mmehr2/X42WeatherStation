@@ -1,5 +1,7 @@
 #!/bin/bash
 
+cd /home/pi/Documents/MyProjects/WeatherStation
+
 python sample.py
 
 python station.py
