@@ -49,6 +49,9 @@ import Adafruit_DHT as DHT
 DHTSensor = 11 # type, either 11 or 22
 humiture_pin = 23 # pin number in BCM mode
 
+# From Lesson 30 (LCD1602 display)
+import LCD1602 as LCD
+
 # From Lesson 31 (barometer)
 import Adafruit_BMP.BMP085 as BMP085
 # No pin numbers needed; this is I2C
@@ -69,8 +72,16 @@ def setupHumiture():
     ''' Init the humidity/temperature (humiture) chip DHT-11 '''
     return # no setup needed
 
+def setupLCD():
+    ''' Init and reset the LCD display '''
+    LCD.init(0x27, 1)	# init(slave address, background light)
+    LCD.clear()
+    LCD.write(0, 0, "Weather Station")
+    LCD.write(1, 1, "Setup...")
+
 def initialize():
     ''' Initialize all the hardware used '''
+    setupLCD()
     setupLDR()
     setupBarometer()
     setupHumiture()
@@ -111,12 +122,20 @@ def outputLED(colorR, colorG, colorB):
 
 def outputLCD(temp, press, humid, light, htemp):
     ''' Format for 1602 display and send to output '''
+    line1 = "T%1.1f P%1.3f" % (temp, press)
+    line2 = "H%1.1f L%d t%1.1f" % ( humid, light, htemp)
+    blanks = "                    " # 20 blanks
+    LCD.write(0,0,blanks)
+    LCD.write(0,1,blanks)
+    LCD.write(0,0,line1)
+    LCD.write(0,1,line2)
     return
 
 def formatDataCSV(temp, press, humid):
     ''' Create the file format: T,P,H,Timestamp '''
     timestamp = "{0:%a %b %d %H:%M:%S %Y}".format(datetime.datetime.now())
-    return "%d,%1.2f,%d,%s" % (temp, press, humid, timestamp)
+    line = "%d,%1.2f,%d,%s" % (temp, press, humid, timestamp)
+    return line
 
 def appendFile(fname, str):
     ''' Append data line to file '''
