@@ -1,0 +1,23 @@
+pi@raspberrypi:~ $ sudo ./assignment7.py
+ * Running on http://127.0.0.1:8080/
+ * Restarting with reloader
+
+pi@raspberrypi:~ $ curl -i -H "Content-Type: application/json" -X POST -d '{"togle":1}' http://127.0.0.1:8080/assignment7/api/led/0
+HTTP/1.0 200 OK
+Content-Type: application/json
+Content-Length: 20
+Server: Werkzeug/0.9.6 Python/3.4.2
+Date: Thu, 20 Apr 2017 09:44:34 GMT
+
+{
+  "toggle": "on"
+}pi@raspberrypi:~ $ curl -i -H "Content-Type: application/json" -X POST -d '{"togle":0}' http://127.0.0.1:8080/assignment7/api/led/0
+HTTP/1.0 200 OK
+Content-Type: application/json
+Content-Length: 21
+Server: Werkzeug/0.9.6 Python/3.4.2
+Date: Thu, 20 Apr 2017 09:45:07 GMT
+
+{
+  "toggle": "off"
+}pi@raspberrypi:~ $ 

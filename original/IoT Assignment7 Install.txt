@@ -1,0 +1,31 @@
+Process for setting up flask
+
+1) Make sure your O/S has pip and flask already installed.  
+check for pip:  pip -V   or pip lists
+
+2) If not, you can install from your Pi
+
+sudo apt-get install python3-flask
+
+3) Once installed, you can create your web "app"
+
+in your main's app.run() method, be sure to change the port number to 8080
+app.run(debug=True, port=8080)
+
+if __name__ == '__main__':
+app.run(debug = True, port=8080)
+
+save your file and chmod the permissions as: chmod 777 assignment7.py
+
+NOTE: you may need to copy some of your sensor's support libraries to your directory where your assignment is.
+Example:  For the BHT180 Sensor, copy the BMP085.py file to your home folder where your assignment7.py file resides
+
+Another NOTE: remember to run your python program as root:  sudo assignment7.py
+
+4) To check your web app using a GET request, use your browser and you machine's default loopback address
+Don't forget to add your new port number in the URL
+http://127.0.0.1:8080/assignment7/api/sensors
+
+
+5) for a post request, you can use curl to check your POST
+curl -i -H "Content-Type: application/json" -X POST -d '{"toggle":1}' http://127.0.0.1:8080/assignment7/api/led/1
