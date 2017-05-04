@@ -4,4 +4,4 @@ python sample.py
 
 python station.py
 
-echo "TBD: copy index.html file to /var/www"
+cp index.html *.*s /var/www/html

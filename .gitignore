@@ -3,3 +3,5 @@ index_experimental.html
 sensors.html
 *.zip
 *.bak
+sensors.*
+sensors.dat
