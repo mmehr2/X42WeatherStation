@@ -1,0 +1,7 @@
+#!/bin/bash
+
+python sample.py
+
+python station.py
+
+echo "TBD: copy index.html file to /var/www"
