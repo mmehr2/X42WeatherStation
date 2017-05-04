@@ -124,9 +124,7 @@ def outputLCD(temp, press, humid, light, htemp):
     ''' Format for 1602 display and send to output '''
     line1 = "T%1.1f P%1.3f" % (temp, press)
     line2 = "H%1.1f L%d t%1.1f" % ( humid, light, htemp)
-    blanks = "                    " # 20 blanks
-    LCD.write(0,0,blanks)
-    LCD.write(0,1,blanks)
+    LCD.clear()
     LCD.write(0,0,line1)
     LCD.write(0,1,line2)
     return
