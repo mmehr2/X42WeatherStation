@@ -39,6 +39,8 @@ Units:
 import datetime
 import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)
+import sqlite3
+database_filename = 'weather_station.db'
 
 # From Lesson 02 (RGB LED with PWM)
 # NOTE: Pin numbers have been modified for BCM mode
@@ -167,9 +169,13 @@ def sampleAmbient():
 
 def convertToColor(temp, press, humid, light):
     ''' Make LED colors as some function of sensor data '''
+    # For now, this function does nothing.
+    # This allows the LED to turn on at sample start, and off when completed.
     red = 100
     green = 20
     blue = 75
+    # TBD: modify LED color according to some function of inputs?
+    # setLEDColor(getColorValue(red, green, blue))
     return (red, green, blue)
 
 def outputLED(colorR, colorG, colorB):
@@ -184,9 +190,9 @@ def outputLCD(temp, press, humid, light, htemp):
     LCD.write(0,1,line2)
     return
 
-def formatDataCSV(temp, press, humid):
+def formatDataCSV(temp, press, humid, local_sample_time):
     ''' Create the file format: T,P,H,Timestamp '''
-    timestamp = "{0:%a %b %d %H:%M:%S %Y}".format(datetime.datetime.now())
+    timestamp = "{0:%a %b %d %H:%M:%S %Y}".format(local_sample_time)
     line = "%d,%1.2f,%d,%s" % (temp, press, humid, timestamp)
     return line
 
@@ -197,12 +203,27 @@ def appendFile(fname, str):
     output.write("\n")
     output.close()
 
+def saveDataSQL(temp, press, humid, utc_sample_time):
+    # Create ISO8601 timestamp YYYY-MM-DDThh:mm:ssZ in UTC
+    timestamp = "{0:%Y-%m-%dT%H:%M:%SZ}".format(utc_sample_time)
+    try:
+        conn = sqlite3.connect(database_filename)
+        curs = conn.cursor()
+        curs.execute("INSERT INTO samples values((?), (?), (?), (?))",\
+                     (temp, press, humid, timestamp)  )
+        conn.commit()
+    except:
+        print("Error on database insertion.")
+
 def do_sample():
-    (T, P) = sampleBarometer()
-    (H, Tx) = sampleHumiture()
+    samptime = datetime.datetime.now()
+    samptime_utc = datetime.datetime.utcnow()
     L = sampleAmbient()
-    data = formatDataCSV(T, P, H)
+    (T, P) = sampleBarometer()
+    (H, Tx) = sampleHumiture() # may take seconds!
+    data = formatDataCSV(T, P, H, samptime)
     appendFile(data_filename, data)
+    saveDataSQL(T, P, H, samptime_utc)
     outputLCD(T, P, H, L, Tx)
     (red, green, blue) = convertToColor(T, P, H, L)
     outputLED(red, green, blue)
