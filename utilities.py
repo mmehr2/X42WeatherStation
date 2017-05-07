@@ -11,6 +11,7 @@ project_name = "weather_station"
 image_filename = "ws_image.jpg"
 data_filename = "sensors.dat"
 html_filename = "index.html"
+database_filename = 'weather_station.db'
 
 def make_db_timestamp(utc_sample_time=datetime.datetime.utcnow()):
     ''' Create ISO8601 timestamp YYYY-MM-DDThh:mm:ssZ in UTC '''
@@ -18,11 +19,11 @@ def make_db_timestamp(utc_sample_time=datetime.datetime.utcnow()):
     return timestamp
 
 def make_local_timestamp(local_time=datetime.datetime.now(), show_seconds=False):
-    ''' Create Iocaltimestamp e.g."Wed Mar 22 04:23:00 2017" in local timezone '''
+    ''' Create Iocaltimestamp e.g."Wed Mar 22 2017 04:23:00" in local timezone '''
     if show_seconds:
-        formatter = "{0:%a %b %d %H:%M:%S %Y}"
+        formatter = "{0:%a %b %d %Y %H:%M:%S}"
     else:
-        formatter = "{0:%a %b %d %H:%M %Y}"
+        formatter = "{0:%a %b %d %Y %H:%M}"
     timestamp = formatter.format(local_time)
     return timestamp
 

@@ -187,7 +187,7 @@ def outputLCD(temp, press, humid, light, htemp):
 
 def formatDataCSV(temp, press, humid, local_sample_time):
     ''' Create the file format: T,P,H,Timestamp '''
-    timestamp = "{0:%a %b %d %H:%M:%S %Y}".format(local_sample_time)
+    timestamp = wsut.make_local_timestamp(local_sample_time, show_seconds=True)
     line = "%d,%1.2f,%d,%s" % (temp, press, humid, timestamp)
     return line
 
@@ -200,12 +200,12 @@ def appendFile(fname, str):
 
 def saveDataSQL(temp, press, humid, utc_sample_time):
     # Create ISO8601 timestamp YYYY-MM-DDThh:mm:ssZ in UTC
-    timestamp = "{0:%Y-%m-%dT%H:%M:%SZ}".format(utc_sample_time)
+    #timestamp = "{0:%Y-%m-%dT%H:%M:%SZ}".format(utc_sample_time)
     try:
         conn = sqlite3.connect(database_filename)
         curs = conn.cursor()
         curs.execute("INSERT INTO samples values((?), (?), (?), (?))",\
-                     (temp, press, humid, timestamp)  )
+                     (temp, press, humid, utc_sample_time)  )
         conn.commit()
     except:
         print("Error on database insertion.")

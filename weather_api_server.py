@@ -7,7 +7,7 @@ import Adafruit_DHT as DHT
 import PCF8591 as ADC
 import datetime
 import sqlite3
-database_filename = 'weather_station.db'
+import utilities as wsut
 
 # init flask instance
 app = Flask(__name__, static_url_path = "")
@@ -22,13 +22,10 @@ def not_found(error):
     return make_response(jsonify( { 'error': 'Not Found' } ), 404)
 
 # Utilities
-def make_db_timestamp(utc_sample_time):
-    # Create ISO8601 timestamp YYYY-MM-DDThh:mm:ssZ in UTC
-    timestamp = "{0:%Y-%m-%dT%H:%M:%SZ}".format(utc_sample_time)
-    return timestamp
-
 def make_json_sample(temp, press, hum, light, tstamp):
-    json_data = [
+    # Convert tstamp string from unicode to regular (since maybe jsonify has issues?)
+    #tstamp2 = string(tstamp)
+    data = [
         {
         'senstype':'temperature',
         'current':temp
@@ -46,7 +43,7 @@ def make_json_sample(temp, press, hum, light, tstamp):
         'current':light
         }
     ]
-    return { "sensors": json_data, "timestamp": tstamp }
+    return { "sensors": data, "timestamp": tstamp }
 
 # GET request handlers
 @app.route('/weather/api/sensors', methods = ['GET'])
@@ -58,23 +55,34 @@ def get_sensors():
     sens_press = sensor.read_pressure()
     ADC.setup(0x48)
     sens_light = ADC.read(0)
-    ts = make_db_timestamp(sens_time)
-    json_data = make_json_data(sens_temp, sens_press, sens_hum, sens_light, ts)
+    ts = wsut.make_db_timestamp(sens_time)
+    json_data = make_json_sample(sens_temp, sens_press, sens_hum, sens_light, ts)
+    print "Measurement finished at ", wsut.make_local_timestamp(datetime.datetime.now())
     return jsonify( json_data )
 
 @app.route('/weather/api/sensors/latest', methods = ['GET'])
 def get_db_sensors():
+    L = 0 # light value not yet supported
+    dbname = wsut.database_filename
     try:
-        conn = sqlite3.connect(database_filename)
+        conn = sqlite3.connect(dbname)
+        print "Opened database", dbname
         curs = conn.cursor()
         results = curs.execute("SELECT * FROM samples WHERE tstamp >= datetime('now','-5 minutes')")
         json_data = []
-        for line in results:
-            (T,P,H,Ts) = line.split('|')
-            json_data += make_json_sample(T,P,H,Ts)
-        return jsonify( json_data )
+        # Always gets -1: print results.rowcount, " results found."
+        for (T,P,H,Ts) in results:
+            data = make_json_sample(T,P,H,L,Ts)
+            #print "...Appending =>", data
+            #json_data.append(data)
+            json_data += [data]
+        # print "Final JSON creation with =>", json_data
+        return jsonify( { "results": json_data } )
     except:
-        return jsonify("Error on database extraction.")
+        return jsonify({ 'error': 'Error on database extraction.' })
+    finally:
+        print "Closing database ", dbname
+        conn.close()
 
 # POST request hander
 @app.route('/weather/api/led/<int:toggle>', methods = ['POST'])
