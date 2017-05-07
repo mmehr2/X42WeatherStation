@@ -36,11 +36,13 @@ Units:
    but for now use human-readable time in local TZ w no TZ designation
 '''
 
+import utilities as wsut
 import datetime
 import RPi.GPIO as GPIO
 GPIO.setmode(GPIO.BCM)
 import sqlite3
 database_filename = 'weather_station.db'
+import camera
 
 # From Lesson 02 (RGB LED with PWM)
 # NOTE: Pin numbers have been modified for BCM mode
@@ -65,8 +67,6 @@ import LCD1602 as LCD
 # From Lesson 31 (barometer)
 import Adafruit_BMP.BMP085 as BMP
 # No pin numbers needed; this is I2C
-
-data_filename = "sensors.dat"
 
 def setupLDR():
     ''' Initialization for LDR hardware input '''
@@ -107,9 +107,10 @@ def setupLED(Rpin, Gpin, Bpin):
     p_B.start(100)
 
 def map(x, in_min, in_max, out_min, out_max):
-	return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
+    ''' Map a value from an input rage (in_min, in_max) to an output range (out_min, out_max).'''
+    return (x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min
 
-def off():
+def offLED():
     for i in ledpins:
         GPIO.output(ledpins[i], GPIO.HIGH)    # Turn off all leds
 
@@ -140,7 +141,7 @@ def destroy():
     p_R.stop()
     p_G.stop()
     p_B.stop()
-    off()
+    offLED()
     GPIO.cleanup()
 
 def sampleBarometer():
@@ -167,27 +168,21 @@ def sampleAmbient():
     sample = ADC.read(0)
     return sample
 
-def convertToColor(temp, press, humid, light):
-    ''' Make LED colors as some function of sensor data '''
-    # For now, this function does nothing.
-    # This allows the LED to turn on at sample start, and off when completed.
-    red = 100
-    green = 20
-    blue = 75
-    # TBD: modify LED color according to some function of inputs?
-    # setLEDColor(getColorValue(red, green, blue))
-    return (red, green, blue)
-
 def outputLED(colorR, colorG, colorB):
+    col = wsut.makeColor(colorR, colorG, colorB)
+    setColor(col)
     return
 
 def outputLCD(temp, press, humid, light, htemp):
     ''' Format for 1602 display and send to output '''
     line1 = "T%1.1f P%1.3f" % (temp, press)
     line2 = "H%1.1f L%d t%1.1f" % ( humid, light, htemp)
-    LCD.clear()
-    LCD.write(0,0,line1)
-    LCD.write(0,1,line2)
+    try:
+        LCD.clear()
+        LCD.write(0,0,line1)
+        LCD.write(0,1,line2)
+    except IOError:
+        print "IOError: most likely cause is loose 3to5v converter."
     return
 
 def formatDataCSV(temp, press, humid, local_sample_time):
@@ -222,16 +217,18 @@ def do_sample():
     (T, P) = sampleBarometer()
     (H, Tx) = sampleHumiture() # may take seconds!
     data = formatDataCSV(T, P, H, samptime)
-    appendFile(data_filename, data)
+    appendFile(wsut.data_filename, data)
     saveDataSQL(T, P, H, samptime_utc)
     outputLCD(T, P, H, L, Tx)
-    (red, green, blue) = convertToColor(T, P, H, L)
-    outputLED(red, green, blue)
 
-def main():
+def take_sample():
     initialize()
     do_sample()
+    outputLED(0xc0, 0x00, 0xe0)
+    camera.take_snapshot(wsut.image_filename, preview_delay=0, alpha=0)
     destroy()
 
-main()
+
+if __name__ == "__main__":
+    take_sample()
     

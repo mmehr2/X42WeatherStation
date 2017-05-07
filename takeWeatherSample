@@ -6,4 +6,4 @@ python sample.py
 
 python station.py
 
-cp index.html *.*s /var/www/html
+cp index.html *.jpg *.*s /var/www/html

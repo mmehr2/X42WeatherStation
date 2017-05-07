@@ -5,3 +5,5 @@ sensors.html
 *.bak
 sensors.*
 sensors.dat
+*.pyc
+*.jpg
