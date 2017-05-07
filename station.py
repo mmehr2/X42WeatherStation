@@ -7,6 +7,7 @@ Michael L. Mehr, adapted from original by Gil Garcia, instructor
 
 import datetime
 import utilities as wsut
+import sqlite3
 
 # Each sensor reading consists of triplets of 3 values, as follows:
 #   Temperature - def.F, int (range TBD)
@@ -28,6 +29,7 @@ column_descriptions = [
     {"name": "Temperature", "tip": "Units: deg.F"}, 
     {"name": "Pressure", "tip": "Units: inHg"}, 
     {"name": "Humidity", "tip": "Units: %"}, 
+    {"name": "Light", "tip": "Units: 0-255"}, 
     {"name": "Timestamp", "tip": "Time taken (local)"}, 
 ]
 
@@ -84,6 +86,7 @@ datarow_string = '''\
                 <td>{data[1]}</td>
                 <td>{data[2]}</td>
                 <td>{data[3]}</td>
+                <td>{data[4]}</td>
             </tr>
 '''
 
@@ -112,8 +115,31 @@ def read_data(fname):
     data = [ x.strip().split(',') for x in ifile ]
     return data
 
+def read_dbdata(dbname):
+    #dbname = wsut.database_filename
+    try:
+        conn = sqlite3.connect(dbname)
+        #print "Opened database", dbname
+        curs = conn.cursor()
+        results = curs.execute("SELECT * FROM samples WHERE tstamp >= datetime('now','-12 hours')")
+        output_data = [[T,P,H,L,Ts] for (T,P,H,L,Ts) in results]
+        #for (T,P,H,L,Ts) in results:
+        #    data = [T,P,H,L,Ts]
+        #    #print "...Appending =>", data
+        #    output_data += [data]
+        # print "Final JSON creation with =>", json_data
+        return output_data
+    except:
+        print 'Error on database extraction.'
+        return []
+    finally:
+        #print "Closing database ", dbname
+        conn.close()
+
 def main():
-    sensor_data = read_data(wsut.data_filename)
+    #sensor_data = read_data(wsut.data_filename)
+    sensor_data = read_dbdata(wsut.database_filename)
+    #print sensor_data
     output_html = merge_data(template_string, sensor_data, column_descriptions)
     output_data(wsut.html_filename, output_html)
 

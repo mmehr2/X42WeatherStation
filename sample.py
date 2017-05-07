@@ -95,12 +95,12 @@ def setupLED(Rpin, Gpin, Bpin):
     for i in ledpins:
         GPIO.setup(ledpins[i], GPIO.OUT)   # Set pins' mode is output
         GPIO.output(ledpins[i], GPIO.HIGH) # Set pins to high(+3.3V) to off led
-    
+
     # set Frequecy to 2KHz (5kHz blue)
     p_R = GPIO.PWM(ledpins['pin_R'], 2000)
     p_G = GPIO.PWM(ledpins['pin_G'], 2000)
     p_B = GPIO.PWM(ledpins['pin_B'], 2000)
-    
+
     # Initial duty Cycle = 0(leds off)
     p_R.start(100)
     p_G.start(100)
@@ -119,11 +119,11 @@ def setColor(col):   # For example : col = 0x112233
     R_val = (col & 0xff0000) >> 16
     G_val = (col & 0x00ff00) >> 8
     B_val = (col & 0x0000ff) >> 0
-    
+
     R_val = map(R_val, 0, 255, 0, 100)
     G_val = map(G_val, 0, 255, 0, 100)
     B_val = map(B_val, 0, 255, 0, 100)
-    
+
     p_R.ChangeDutyCycle(100-R_val)     # Change duty cycle
     p_G.ChangeDutyCycle(100-G_val)
     p_B.ChangeDutyCycle(100-B_val)
@@ -198,14 +198,14 @@ def appendFile(fname, str):
     output.write("\n")
     output.close()
 
-def saveDataSQL(temp, press, humid, utc_sample_time):
+def saveDataSQL(temp, press, humid, light, utc_sample_time):
     # Create ISO8601 timestamp YYYY-MM-DDThh:mm:ssZ in UTC
     #timestamp = "{0:%Y-%m-%dT%H:%M:%SZ}".format(utc_sample_time)
     try:
         conn = sqlite3.connect(database_filename)
         curs = conn.cursor()
-        curs.execute("INSERT INTO samples values((?), (?), (?), (?))",\
-                     (temp, press, humid, utc_sample_time)  )
+        curs.execute("INSERT INTO samples values((?), (?), (?), (?), (?))",\
+                     (temp, press, humid, light, utc_sample_time)  )
         conn.commit()
     except:
         print("Error on database insertion.")
@@ -218,7 +218,7 @@ def do_sample():
     (H, Tx) = sampleHumiture() # may take seconds!
     data = formatDataCSV(T, P, H, samptime)
     appendFile(wsut.data_filename, data)
-    saveDataSQL(T, P, H, samptime_utc)
+    saveDataSQL(T, P, H, L, samptime_utc)
     outputLCD(T, P, H, L, Tx)
 
 def take_sample():
@@ -231,4 +231,3 @@ def take_sample():
 
 if __name__ == "__main__":
     take_sample()
-    
