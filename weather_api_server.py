@@ -8,6 +8,9 @@ import PCF8591 as ADC
 import datetime
 import sqlite3
 import utilities as wsut
+import sample
+import camera
+from time import sleep
 
 # init flask instance
 app = Flask(__name__, static_url_path = "")
@@ -62,49 +65,91 @@ def get_sensors():
 
 @app.route('/weather/api/sensors/latest', methods = ['GET'])
 def get_db_sensors():
-    L = 0 # light value not yet supported
     dbname = wsut.database_filename
     try:
         conn = sqlite3.connect(dbname)
-        print "Opened database", dbname
+        #print "Opened database", dbname
         curs = conn.cursor()
         results = curs.execute("SELECT * FROM samples WHERE tstamp >= datetime('now','-5 minutes')")
         json_data = []
         # Always gets -1: print results.rowcount, " results found."
-        for (T,P,H,Ts) in results:
+        for (T,P,H,L,Ts) in results:
             data = make_json_sample(T,P,H,L,Ts)
             #print "...Appending =>", data
-            #json_data.append(data)
             json_data += [data]
         # print "Final JSON creation with =>", json_data
         return jsonify( { "results": json_data } )
     except:
         return jsonify({ 'error': 'Error on database extraction.' })
     finally:
-        print "Closing database ", dbname
+        #print "Closing database ", dbname
         conn.close()
 
-# POST request hander
-@app.route('/weather/api/led/<int:toggle>', methods = ['POST'])
-def set_led(toggle):
+# POST request handers
+@app.route('/weather/api/led/<int:lednum>', methods = ['POST'])
+def set_led(lednum):
     switch_status = "off"
-        
-    if not request.json or not "toggle" in request.json:
+    
+    if not request.json or not "action" in request.json:
         abort(400)
-    toggle = request.json['toggle']
+    if lednum != 0:
+        return jsonify( { 'message': "Use of led not supported", 'status':-1, 'id': lednum } )
+    action = request.json['action']
+    try:
+        sample.setup()
+        sample.setupRelay()
+        
+        if action > 0:
+            #turn on led
+            sample.setRelay(0xffffff)
+            switch_status = "on"
+        else:
+            #turn off led
+            sample.setRelay(0)
+            switch_status = "off"
+        return jsonify( { 'message': switch_status, 'status': 0, 'id': lednum } )
+    except:
+        return jsonify( { 'message': "Could not use led", 'status':-2, 'id': lednum } )
+    #finally:
+    #    sample.cleanup() # NOTE: executing this always turns off the relay
 
-    if(toggle > 0 ):
-        #turn on led
-
-        switch_status = "on"
-    else:
-        #turn off led
-
-        switch_status = "off"
-    return jsonify( { 'toggle': switch_status } )
+@app.route('/weather/api/camera/<int:camnum>', methods = ['POST'])
+def snap_cam(camnum):
+    if not request.json or not "action" in request.json:
+        abort(400)
+    action = request.json['action']
+    filename = "ws_camimage.jpg"
+    if camnum < 0:
+        return jsonify( { 'message': "Use of camera not supported", 'status':-1, 'id': camnum } )
+    cam_status = ""
+    result = 0
+    try:
+        sample.setup()
+        sample.setupLED(sample.R, sample.G, sample.B)
+        
+        if action > 0:
+            resolution = (1024,768)
+            if camnum == 1:
+                resolution = (2592, 1944)
+            if camnum == 2:
+                resolution = (100, 100)
+            sample.setColor(0xc000df)
+            result = camera.take_snapshot(filename, preview_delay=0, alpha=0, resolution=resolution)
+            sample.offLED()
+            if result == 0:
+                cam_status = filename
+            elif result == -1:
+                cam_status = "Cannot capture image, camera in use."
+            else:  #if result == -2: or anything else for that matter
+                cam_status = "Cannot capture image, camera error."
+        return jsonify( { 'message': cam_status, 'status': result, 'id': camnum } )
+    except:
+        return jsonify( { 'message': "Could not use camera", 'status':-2, 'id': camnum } )
+    finally:
+        sample.cleanupLED() # to avoid use of cleanup() which shuts off the relay LED
 
 # main
-# Solution to 'connection refused' involves setting host to zeroes:
+# Solution to 'connection refused' involves setting host as well as port:
 #  http://stackoverflow.com/questions/30554702/cant-connect-to-flask-web-service-connection-refused
 
 if __name__ == '__main__':

@@ -52,6 +52,10 @@ B = 27 # for later model Pi's only, else 21
 # See discussion here: https://raspberrypi.stackexchange.com/questions/12966/what-is-the-difference-between-board-and-bcm-for-gpio-pin-numbering
 init_color = 0xf0ff00
 
+# From Lesson 04 (relay)
+# NOTE: This will drive the 2-color LED, on=green, off=red
+RelayPin = 24
+
 # From Lesson 20 (photoresistor)
 import PCF8591 as ADC
 
@@ -67,6 +71,22 @@ import LCD1602 as LCD
 # From Lesson 31 (barometer)
 import Adafruit_BMP.BMP085 as BMP
 # No pin numbers needed; this is I2C
+
+def setup():
+    GPIO.setmode(GPIO.BCM)
+    GPIO.setwarnings(False)
+
+def cleanup():
+    GPIO.cleanup()
+
+def setupRelay():
+    GPIO.setup(RelayPin, GPIO.OUT)
+
+def setRelay(on):
+    if on != 0:
+        GPIO.output(RelayPin, GPIO.HIGH)
+    else:
+        GPIO.output(RelayPin, GPIO.LOW)
 
 def setupLDR():
     ''' Initialization for LDR hardware input '''
@@ -95,12 +115,12 @@ def setupLED(Rpin, Gpin, Bpin):
     for i in ledpins:
         GPIO.setup(ledpins[i], GPIO.OUT)   # Set pins' mode is output
         GPIO.output(ledpins[i], GPIO.HIGH) # Set pins to high(+3.3V) to off led
-
+    
     # set Frequecy to 2KHz (5kHz blue)
     p_R = GPIO.PWM(ledpins['pin_R'], 2000)
     p_G = GPIO.PWM(ledpins['pin_G'], 2000)
     p_B = GPIO.PWM(ledpins['pin_B'], 2000)
-
+    
     # Initial duty Cycle = 0(leds off)
     p_R.start(100)
     p_G.start(100)
@@ -119,30 +139,37 @@ def setColor(col):   # For example : col = 0x112233
     R_val = (col & 0xff0000) >> 16
     G_val = (col & 0x00ff00) >> 8
     B_val = (col & 0x0000ff) >> 0
-
+    
     R_val = map(R_val, 0, 255, 0, 100)
     G_val = map(G_val, 0, 255, 0, 100)
     B_val = map(B_val, 0, 255, 0, 100)
-
+    
     p_R.ChangeDutyCycle(100-R_val)     # Change duty cycle
     p_G.ChangeDutyCycle(100-G_val)
     p_B.ChangeDutyCycle(100-B_val)
 
+def cleanupLED():
+    ''' Clean up after LED usage. '''
+    p_R.stop()
+    p_G.stop()
+    p_B.stop()
+    offLED()
+
 def initialize():
-    ''' Initialize all the hardware used '''
+    ''' Initialize all the hardware used for sampling.'''
+    setup()
     setupLCD()
     setupLED(R, G, B)
     setColor(init_color)
+    #setupRelay() # NOTE: this is NOT used for sampling; must init separately
     setupLDR()
     setupBarometer()
     setupHumiture()
 
 def destroy():
-    p_R.stop()
-    p_G.stop()
-    p_B.stop()
-    offLED()
-    GPIO.cleanup()
+    ''' Clean up after hardware usage.'''
+    cleanupLED()
+    cleanup()
 
 def sampleBarometer():
     ''' Return BMP-180 temp *F and press inHg as float tuple (T,P) '''
@@ -226,8 +253,10 @@ def take_sample():
     do_sample()
     outputLED(0xc0, 0x00, 0xe0)
     camera.take_snapshot(wsut.image_filename, preview_delay=0, alpha=0)
-    destroy()
+    #destroy() # WARNING: use of cleanup() will shut off the relay
+    cleanupLED()
 
 
 if __name__ == "__main__":
     take_sample()
+    
