@@ -113,26 +113,11 @@ footer {
     font-size: 75%;
 }
 
-/*
-Add transparent background image (trick from: https://css-tricks.com/snippets/css/transparent-background-images/)
-I incorporated some mods from comments, and made it apply to only one div in the document.
-*/
-.bgimgdiv {
-  width: 100%;
-  height: 100%;
-  display: block;
-  position: relative;
+.imgdiv img {
+    border-radius: 8px;
+    max-width: 100%;
+    height: auto;
+    display: block;
+    margin: auto;
+    width: 90%;
 }
-
-.bgimgdiv::after {
-  content: "";
-  background: url(ws_image.jpg);
-  opacity: 0.5;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  right: 0;
-  position: absolute;
-  z-index: -1;   
-}
-
