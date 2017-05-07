@@ -52,7 +52,7 @@ template_string = '''
         <link rel="stylesheet" type="text/css" href="{project}.css">
         <script src="{project}.js"></script>
     </head>
-    <body>
+    <body><div class="bgimgdiv">
         <h1>Sensor Output from {sname}</h1>
         <table class="datatable">
             <tr class="dataheadrow">
@@ -66,7 +66,7 @@ template_string = '''
         </div></p>
         <p><div class="status"><span id="comstat">COMM STATUS: </span><span id="status">Offline.</span></div></p>
         <footer>Design: Michael L. Mehr, Gil Garcia (C) 2017</footer>
-    </body>
+    </div></body>
 </html>
 '''
 

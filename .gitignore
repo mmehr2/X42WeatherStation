@@ -7,3 +7,4 @@ sensors.*
 sensors.dat
 *.pyc
 *.jpg
+*.db
