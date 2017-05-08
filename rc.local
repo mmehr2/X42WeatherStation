@@ -17,4 +17,7 @@ if [ "$_IP" ]; then
   printf "My IP address is %s\n" "$_IP"
 fi
 
+# MLM - custom: added to /etc/rc.local to autorun the Weather Station API server
+sudo python runWeatherServer &
+
 exit 0
