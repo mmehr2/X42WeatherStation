@@ -1,14 +1,11 @@
 #!/usr/bin/python3
 from flask import Flask, jsonify, abort, request, make_response, url_for
-
-import RPi.GPIO as GPIO
-import Adafruit_BMP.BMP085 as BMP085
-import Adafruit_DHT as DHT
-import PCF8591 as ADC
+import sys
 import datetime
 import sqlite3
 import utilities as wsut
 import sample
+import relay
 import camera
 from time import sleep
 
@@ -26,8 +23,6 @@ def not_found(error):
 
 # Utilities
 def make_json_sample(temp, press, hum, light, tstamp):
-    # Convert tstamp string from unicode to regular (since maybe jsonify has issues?)
-    #tstamp2 = string(tstamp)
     data = [
         {
         'senstype':'temperature',
@@ -51,26 +46,23 @@ def make_json_sample(temp, press, hum, light, tstamp):
 # GET request handlers
 @app.route('/weather/api/sensors', methods = ['GET'])
 def get_sensors():
-    sensor = BMP085.BMP085()
-    sens_time = datetime.datetime.utcnow()
-    sens_temp = sensor.read_temperature()
-    sens_hum, tempx = DHT.read_retry(11, 23)
-    sens_press = sensor.read_pressure()
-    ADC.setup(0x48)
-    sens_light = ADC.read(0)
+    X = sample.take_sample()
+    (sens_temp,sens_press,sens_hum,sens_light,sens_time,stlocal) = X
     ts = wsut.make_db_timestamp(sens_time)
     json_data = make_json_sample(sens_temp, sens_press, sens_hum, sens_light, ts)
     print "Measurement finished at ", wsut.make_local_timestamp(datetime.datetime.now())
     return jsonify( json_data )
 
 @app.route('/weather/api/sensors/latest', methods = ['GET'])
-def get_db_sensors():
+def get_db_sensors(minutes=60):
+    ''' Get a subset of the data and return to the client as JSON.'''
     dbname = wsut.database_filename
     try:
         conn = sqlite3.connect(dbname)
         #print "Opened database", dbname
         curs = conn.cursor()
-        results = curs.execute("SELECT * FROM samples WHERE tstamp >= datetime('now','-5 minutes')")
+        results = curs.execute("SELECT * FROM samples WHERE tstamp >= datetime('now','-60 minutes')", (recent,))
+        # NOTE: results is an array of value tuples, one per row
         json_data = []
         # Always gets -1: print results.rowcount, " results found."
         for (T,P,H,L,Ts) in results:
@@ -78,9 +70,11 @@ def get_db_sensors():
             #print "...Appending =>", data
             json_data += [data]
         # print "Final JSON creation with =>", json_data
-        return jsonify( { "results": json_data } )
+        return jsonify( { 'results': json_data } )
     except:
-        return jsonify({ 'error': 'Error on database extraction.' })
+        e = sys.exc_info()[0]
+        #print("Error on database extraction: %s" % e)
+        return jsonify({ 'error': 'Error on database extraction: %s' % e })
     finally:
         #print "Closing database ", dbname
         conn.close()
@@ -96,22 +90,21 @@ def set_led(lednum):
         return jsonify( { 'message': "Use of led not supported", 'status':-1, 'id': lednum } )
     action = request.json['action']
     try:
-        sample.setup()
-        sample.setupRelay()
+        relay.setup()
         
         if action > 0:
             #turn on led
-            sample.setRelay(0xffffff)
+            relay.set(0xffffff)
             switch_status = "on"
         else:
             #turn off led
-            sample.setRelay(0)
+            relay.set(0)
             switch_status = "off"
         return jsonify( { 'message': switch_status, 'status': 0, 'id': lednum } )
     except:
         return jsonify( { 'message': "Could not use led", 'status':-2, 'id': lednum } )
     #finally:
-    #    sample.cleanup() # NOTE: executing this always turns off the relay
+    #    relay.cleanup() # NOTE: executing this always turns off the relay
 
 @app.route('/weather/api/camera/<int:camnum>', methods = ['POST'])
 def snap_cam(camnum):
