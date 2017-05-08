@@ -55,7 +55,7 @@ init_color = 0x000000
 sampling_color = 0xf0ff00
 cam_color = 0xc000e0
 
-def initialize():
+def open():
     ''' Initialize all the hardware used for sampling.'''
     GPIO.setmode(GPIO.BCM)
     #GPIO.setwarnings(False) # only needed if my scheme for pin sharing doesn't work
@@ -66,7 +66,7 @@ def initialize():
     barometer.setup()
     DHT.setup()
 
-def destroy():
+def close():
     ''' Clean up after hardware usage.'''
     DHT.cleanup()
     barometer.cleanup()
@@ -132,7 +132,7 @@ def take_sample(flashLED = False):
     return (T, P, H, L, samptime_utc, samptime)
 
 def run():
-    initialize()
+    open()
     X  = take_sample(flashLED = True)
     #print X
     (T, P, H, L, samptime_utc, tmlocal) = X
@@ -142,7 +142,7 @@ def run():
     LED.setColor(cam_color)
     camera.take_snapshot(wsut.image_filename, preview_delay=0, alpha=0)
     LED.setColor(init_color)
-    destroy()
+    close()
 
 if __name__ == "__main__":
     run()

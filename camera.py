@@ -5,6 +5,7 @@ Date: May 6, 2017
 Project: Weather Station v1.0
 '''
 
+import sys
 from picamera import PiCamera, exc
 from time import sleep
 import utilities as ut
@@ -45,11 +46,12 @@ def take_snapshot(filename, preview_delay=3, resolution=(1024,768), alpha=255, a
             Another process (e.g. IDLE shell) is probably using the camera.
             Please close it and try again."""
         return -1
-    except ValueError:
-        print "Camera value error occurred."
+    except ValueError as e:
+        print "Camera value error occurred: %s" % e
         return -5
     except:
-        print "Other camera error occurred."
+        e = sys.exc_info()[0]
+        print "Other camera error occurred: %s" % e
         return -2
     finally:
         camera.stop_preview()

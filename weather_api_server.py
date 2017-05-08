@@ -5,6 +5,7 @@ import datetime
 import sqlite3
 import utilities as wsut
 import sample
+import pwmled as LED
 import relay
 import camera
 from time import sleep
@@ -46,22 +47,36 @@ def make_json_sample(temp, press, hum, light, tstamp):
 # GET request handlers
 @app.route('/weather/api/sensors', methods = ['GET'])
 def get_sensors():
-    X = sample.take_sample()
-    (sens_temp,sens_press,sens_hum,sens_light,sens_time,stlocal) = X
-    ts = wsut.make_db_timestamp(sens_time)
-    json_data = make_json_sample(sens_temp, sens_press, sens_hum, sens_light, ts)
-    print "Measurement finished at ", wsut.make_local_timestamp(datetime.datetime.now())
-    return jsonify( json_data )
+    try:
+        sample.open()
+        X = sample.take_sample(flashLED = True)
+        (sens_temp,sens_press,sens_hum,sens_light,sens_time,stlocal) = X
+        ts = wsut.make_db_timestamp(sens_time)
+        json_data = make_json_sample(sens_temp, sens_press, sens_hum, sens_light, ts)
+        print "Measurement finished at ", wsut.make_local_timestamp(datetime.datetime.now())
+        return jsonify( json_data )
+    except:
+        e = sys.exc_info()[0]
+        #print("Error on sensor sampling: %s" % e)
+        return jsonify({ 'error': 'Error on sensor sampling: %s' % e })
+    finally:
+        sample.close()
 
 @app.route('/weather/api/sensors/latest', methods = ['GET'])
+@app.route('/weather/api/sensors/latest/<int:minutes>', methods = ['GET'])
 def get_db_sensors(minutes=60):
     ''' Get a subset of the data and return to the client as JSON.'''
     dbname = wsut.database_filename
+    if minutes < 0:
+        return jsonify( { 'error': "Unsupported query for T<0." } )
+    elif minutes == 0:
+        minutes = 60
     try:
         conn = sqlite3.connect(dbname)
         #print "Opened database", dbname
         curs = conn.cursor()
-        results = curs.execute("SELECT * FROM samples WHERE tstamp >= datetime('now','-60 minutes')", (recent,))
+        recent = "-%d minutes" % minutes
+        results = curs.execute("SELECT * FROM samples WHERE tstamp >= datetime('now',(?))", (recent,))
         # NOTE: results is an array of value tuples, one per row
         json_data = []
         # Always gets -1: print results.rowcount, " results found."
@@ -92,7 +107,7 @@ def set_led(lednum):
     try:
         relay.setup()
         
-        if action > 0:
+        if action != 0:
             #turn on led
             relay.set(0xffffff)
             switch_status = "on"
@@ -102,44 +117,56 @@ def set_led(lednum):
             switch_status = "off"
         return jsonify( { 'message': switch_status, 'status': 0, 'id': lednum } )
     except:
-        return jsonify( { 'message': "Could not use led", 'status':-2, 'id': lednum } )
-    #finally:
-    #    relay.cleanup() # NOTE: executing this always turns off the relay
+        e = sys.exc_info()[0]
+        return jsonify( { 'message': "Could not use led: e=%s" % e, 'status':-2, 'id': lednum } )
+    finally:
+        relay.cleanup()
 
 @app.route('/weather/api/camera/<int:camnum>', methods = ['POST'])
 def snap_cam(camnum):
     if not request.json or not "action" in request.json:
         abort(400)
     action = request.json['action']
+    flash_led = True # since the LED might affect the image, we allow the user to turn it off
+    if "led" in request.json:
+        led_ = request.json["led"]
+        if led_ == 0:
+            flash_led = False
     filename = "ws_camimage.jpg"
-    if camnum < 0:
+    capfilename = filename
+    if int(action) > 1:
+        filename = "ws_image.jpg"
+        capfilename = "/var/www/html/"+filename
+    if camnum < 0 or camnum > 2:
         return jsonify( { 'message': "Use of camera not supported", 'status':-1, 'id': camnum } )
     cam_status = ""
     result = 0
     try:
-        sample.setup()
-        sample.setupLED(sample.R, sample.G, sample.B)
+        if flash_led:
+            LED.setup()
+            LED.setColor(0xc000df)
         
-        if action > 0:
+        if action != 0:
             resolution = (1024,768)
             if camnum == 1:
                 resolution = (2592, 1944)
             if camnum == 2:
                 resolution = (100, 100)
-            sample.setColor(0xc000df)
-            result = camera.take_snapshot(filename, preview_delay=0, alpha=0, resolution=resolution)
-            sample.offLED()
+            result = camera.take_snapshot(capfilename, preview_delay=0, alpha=0, resolution=resolution)
             if result == 0:
-                cam_status = filename
+                (x, y) = resolution
+                cam_status = "%s %ix%i" % (filename, x, y)
             elif result == -1:
                 cam_status = "Cannot capture image, camera in use."
             else:  #if result == -2: or anything else for that matter
                 cam_status = "Cannot capture image, camera error."
         return jsonify( { 'message': cam_status, 'status': result, 'id': camnum } )
     except:
-        return jsonify( { 'message': "Could not use camera", 'status':-2, 'id': camnum } )
+        e = sys.exc_info()[0]
+        return jsonify( { 'message': "Could not use camera, e=%s" % e, 'status':-2, 'id': camnum } )
     finally:
-        sample.cleanupLED() # to avoid use of cleanup() which shuts off the relay LED
+        if flash_led:
+            LED.cleanup()
 
 # main
 # Solution to 'connection refused' involves setting host as well as port:
