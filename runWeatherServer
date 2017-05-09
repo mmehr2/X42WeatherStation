@@ -2,4 +2,6 @@
 
 cd /home/pi/Documents/MyProjects/WeatherStation
 
-python weather_api_server.py &
+/bin/sleep 15
+
+/usr/bin/python weather_api_server.py &

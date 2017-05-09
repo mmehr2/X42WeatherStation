@@ -20,7 +20,7 @@ RelayPin = 24
 def setup():
     if GPIO.getmode() != GPIO.BCM:
         GPIO.setmode(GPIO.BCM)
-    #GPIO.setwarnings(False)
+    GPIO.setwarnings(False)
     GPIO.setup(RelayPin, GPIO.OUT, initial=GPIO.LOW)
 
 def set(on):
@@ -30,4 +30,16 @@ def set(on):
         GPIO.output(RelayPin, GPIO.LOW)
 
 def cleanup():
-    GPIO.setup(RelayPin, GPIO.IN)
+    # NOTE: Only use this when it is ok to shut off the relay (side effect of IN mode).
+    #GPIO.setup(RelayPin, GPIO.IN)
+    return
+
+if __name__=="__main__":
+    from time import sleep
+    setup()
+    set(1)
+    sleep(1)
+    set(0)
+    sleep(1)
+    set(1)
+    #cleanup()

@@ -52,8 +52,8 @@ import dht11 as DHT
 import camera
 
 init_color = 0x000000
-sampling_color = 0xf0ff00
-cam_color = 0xc000e0
+sampling_color = wsut.pwm_color_hilight1
+cam_color = wsut.pwm_color_background
 
 def open():
     ''' Initialize all the hardware used for sampling.'''
@@ -136,8 +136,8 @@ def run():
     X  = take_sample(flashLED = True)
     #print X
     (T, P, H, L, samptime_utc, tmlocal) = X
-    print T, P, H, L
-    print samptime_utc
+    #print T, P, H, L
+    #print samptime_utc
     saveDataSQL(T, P, H, L, samptime_utc)
     LED.setColor(cam_color)
     camera.take_snapshot(wsut.image_filename, preview_delay=0, alpha=0)

@@ -18,6 +18,6 @@ if [ "$_IP" ]; then
 fi
 
 # MLM - custom: added to /etc/rc.local to autorun the Weather Station API server
-sudo python runWeatherServer &
+/home/pi/Documents/MyProjects/WeatherStation/runWeatherServer &
 
 exit 0

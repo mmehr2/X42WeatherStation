@@ -5,6 +5,7 @@ UCSCx Spring 2017
 Michael L. Mehr, adapted from original by Gil Garcia, instructor
 """
 
+import sys
 import datetime
 import utilities as wsut
 import sqlite3
@@ -47,6 +48,7 @@ column_descriptions = [
 # I use the Python feature of named substitution parameters whenever possible.
 # Also note the use of data subscripting in the data row template. This allows me to pass the entire reading at once.
 #
+template_filename = "template.main.txt"
 template_string = '''
 <html>
     <head>
@@ -76,10 +78,12 @@ template_string = '''
 </html>
 '''
 
+headercol_filename = "template.hdrcol.txt"
 headercol_string = '''\
                 <td><div class="tooltip">{name}<span class="tooltiptext">{tooltip}</span></div></td>
 '''
 
+datarow_filename = "template.datarow.txt"
 datarow_string = '''\
             <tr class="datarow" id="datarow{num}" onmouseover="highlight('datarow{num}')" onmouseout="reset('datarow{num}')">
                 <td>{data[0]}</td>
@@ -115,6 +119,11 @@ def read_data(fname):
     data = [ x.strip().split(',') for x in ifile ]
     return data
 
+def read_template(fname):
+    ifile = open(fname, "r")
+    data = ifile.read()
+    return data
+
 def read_dbdata(dbname):
     #dbname = wsut.database_filename
     try:
@@ -130,7 +139,8 @@ def read_dbdata(dbname):
         # print "Final JSON creation with =>", json_data
         return output_data
     except:
-        print 'Error on database extraction.'
+        e = sys.exc_info()[0]
+        print 'Error on database extraction: %s' % e
         return []
     finally:
         #print "Closing database ", dbname
@@ -139,7 +149,16 @@ def read_dbdata(dbname):
 def main():
     #sensor_data = read_data(wsut.data_filename)
     sensor_data = read_dbdata(wsut.database_filename)
+    template_string = read_template(template_filename)
+    headercol_string = read_template(headercol_filename)
+    datarow_string = read_template(datarow_filename)
     #print sensor_data
+    ##    print "Main INDEX Template:"
+    ##    print template_string
+    ##    print "Header Column Template:"
+    ##    print headercol_string
+    ##    print "Datarow Template:"
+    ##    print datarow_string
     output_html = merge_data(template_string, sensor_data, column_descriptions)
     output_data(wsut.html_filename, output_html)
 

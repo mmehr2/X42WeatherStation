@@ -13,6 +13,21 @@ data_filename = "sensors.dat"
 html_filename = "index.html"
 database_filename = 'weather_station.db'
 
+# Website color scheme inspired by a web article
+'''
+    Color scheme inspiration from: #24 from https://designschool.canva.com/blog/website-color-schemes/
+    Color elements: Deep purple (6E3667), Electric lime (88D317), White (fff), and Light Blue (4da6ff)
+'''
+web_color_background = 0x6E3667 # deep purple
+web_color_foreground = 0xffffff # white
+web_color_hilight1 = 0x88D317 # electric lime
+web_color_hilight2 = 0x4da6ff # light blue
+# Same, tweaked for PWMLED module
+pwm_color_background = 0xc000e0 # deep purple / magenta
+pwm_color_foreground = 0xffffff # white
+pwm_color_hilight1 = 0xf0ff00 # electric lime
+pwm_color_hilight2 = 0x2d86ff # light blue
+
 def make_db_timestamp(utc_sample_time=datetime.datetime.utcnow()):
     ''' Create ISO8601 timestamp YYYY-MM-DDThh:mm:ssZ in UTC '''
     timestamp = "{0:%Y-%m-%dT%H:%M:%SZ}".format(utc_sample_time)

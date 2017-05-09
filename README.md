@@ -1,7 +1,7 @@
 See file setup.py for documentation of the hardware setup of this project.
 
 # Operation
-The X42 Weather Station is a simple environmental sensor for gathering weather-type information and uploading it to the cloud.
+The 42X Weather Station is a simple environmental sensor for gathering weather-type information and uploading it to the cloud.
 
 The X42 Weather Station provides several features for automated operation and control.
 * web access from any browser

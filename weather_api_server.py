@@ -1,5 +1,8 @@
-#!/usr/bin/python3
+'''
+Main API server file using Flask web server
+'''
 from flask import Flask, jsonify, abort, request, make_response, url_for
+
 import sys
 import datetime
 import sqlite3
@@ -47,6 +50,10 @@ def make_json_sample(temp, press, hum, light, tstamp):
 # GET request handlers
 @app.route('/weather/api/sensors', methods = ['GET'])
 def get_sensors():
+    '''
+    TEST:
+    curl -i -H "Content-Type: application/json" -X GET http://12.0.0.1:8080/weather/api/sensors
+    '''
     try:
         sample.open()
         X = sample.take_sample(flashLED = True)
@@ -65,7 +72,11 @@ def get_sensors():
 @app.route('/weather/api/sensors/latest', methods = ['GET'])
 @app.route('/weather/api/sensors/latest/<int:minutes>', methods = ['GET'])
 def get_db_sensors(minutes=60):
-    ''' Get a subset of the data and return to the client as JSON.'''
+    ''' Get a subset of the data and return to the client as JSON.
+    TEST:
+    curl -i -H "Content-Type: application/json" -X GET http://12.0.0.1:8080/weather/api/sensors/latest
+    curl -i -H "Content-Type: application/json" -X GET http://12.0.0.1:8080/weather/api/sensors/latest/15
+    '''
     dbname = wsut.database_filename
     if minutes < 0:
         return jsonify( { 'error': "Unsupported query for T<0." } )
@@ -97,6 +108,10 @@ def get_db_sensors(minutes=60):
 # POST request handers
 @app.route('/weather/api/led/<int:lednum>', methods = ['POST'])
 def set_led(lednum):
+    '''
+    TEST:
+    curl -i -H "Content-Type: application/json" -X POST -d '{"action":1}' http://12.0.0.1:8080/weather/api/led/0
+    '''
     switch_status = "off"
     
     if not request.json or not "action" in request.json:
@@ -124,6 +139,10 @@ def set_led(lednum):
 
 @app.route('/weather/api/camera/<int:camnum>', methods = ['POST'])
 def snap_cam(camnum):
+    '''
+    TEST:
+    curl -i -H "Content-Type: application/json" -X POST -d '{"action":2,'led':1}' http://12.0.0.1:8080/weather/api/camera/0
+    '''
     if not request.json or not "action" in request.json:
         abort(400)
     action = request.json['action']
