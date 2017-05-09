@@ -1,0 +1,1 @@
+                <td><div class="tooltip">{name}<span class="tooltiptext">{tooltip}</span></div></td>

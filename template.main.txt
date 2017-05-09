@@ -1,0 +1,26 @@
+<html>
+    <head>
+        <title>{sname}</title>
+        <link rel="stylesheet" type="text/css" href="{project}.css">
+        <script src="{project}.js"></script>
+    </head>
+    <body>
+        <h1>Sensor Output from {sname}</h1>
+        <p class="notes">NOTE: Scroll down for data below image.</p>
+        <div class="imgdiv">
+            <img src="ws_image.jpg" alt="Image Snapshot by Weather Station Camera" >
+        </div>
+        <p><table class="datatable">
+            <tr class="dataheadrow">
+                {header_columns}
+            </tr>
+        {data_rows}
+        </table></p>
+        <p><div class="tooltip">
+        	<button class="btn info" onclick="add_new()">Take Measurement</button>
+            <span class="tooltiptext">Take a new measurement (TBD)</span>
+        </div></p>
+        <p><div class="status"><span id="comstat">COMM STATUS: </span><span id="status">Offline.</span></div></p>
+        <footer>Design: Michael L. Mehr, Gil Garcia (C) 2017</footer>
+    </body>
+</html>
