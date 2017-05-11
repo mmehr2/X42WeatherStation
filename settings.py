@@ -88,16 +88,16 @@ if __name__=="__main__":
     print "Using 'settings' table of ", wsut.database_filename
     # Create some defaults here to make this script useful.
     sval = '128'
-    if len(sys.argv) > 1:
-        sval = sys.argv[1]
     val = get('CameraLightThreshold')
     print "Original CameraLightThreshold = ", val
-    set('CameraLightThreshold', sval)
-    val = get('CameraLightThreshold')
-    if val != sval:
-        print "Got value error creating CameraLightThreshold:<%s> from %s" % (val, sval)
-    else:
-        print "Properly set CameraLightThreshold to ", val
+    if len(sys.argv) > 1:
+        sval = sys.argv[1]
+        set('CameraLightThreshold', sval)
+        val = get('CameraLightThreshold')
+        if val != sval:
+            print "Got value error creating CameraLightThreshold:<%s> from %s" % (val, sval)
+        else:
+            print "Properly set CameraLightThreshold to ", val
     # Show what we've got now
     contents = getall("%")
     print "Current settings database:"
