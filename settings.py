@@ -90,6 +90,8 @@ if __name__=="__main__":
     sval = '128'
     if len(sys.argv) > 1:
         sval = sys.argv[1]
+    val = get('CameraLightThreshold')
+    print "Original CameraLightThreshold = ", val
     set('CameraLightThreshold', sval)
     val = get('CameraLightThreshold')
     if val != sval:
