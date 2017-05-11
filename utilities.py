@@ -6,7 +6,7 @@ Project: Weather Station v1.0
 '''
 import datetime
 
-device_name = "RPi Weather Station 42X-001"
+device_name = "RPi Weather Station X42-v1"
 project_name = "weather_station"
 image_filename = "ws_image.jpg"
 data_filename = "sensors.dat"
