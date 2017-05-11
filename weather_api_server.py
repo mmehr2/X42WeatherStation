@@ -75,15 +75,16 @@ def get_sensors():
     finally:
         sample.close()
 
-@app.route('/weather/api/sensors/latest', methods = ['GET'])
-@app.route('/weather/api/sensors/latest/<int:minutes>', methods = ['GET'])
-def get_db_sensors(minutes=60):
+#@app.route('/weather/api/sensors/latest/<string:dvcid>/<int:minutes>', methods = ['GET'])
+@app.route('/weather/api/sensors/latest/<string:dvcid>', methods = ['GET'])
+def get_db_sensors(dvcid, minutes=60):
     ''' Get a subset of the data and return to the client as JSON.
     TEST:
     curl -i -H "Content-Type: application/json" -X GET http://12.0.0.1:8080/weather/api/sensors/latest
     curl -i -H "Content-Type: application/json" -X GET http://12.0.0.1:8080/weather/api/sensors/latest/15
     '''
     dbname = wsut.database_filename
+    print "API GET sensors: Device ID given = ", dvcid
     if minutes < 0:
         return jsonify( { 'error': "Unsupported query for T<0." } )
     elif minutes == 0:
