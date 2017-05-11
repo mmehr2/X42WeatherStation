@@ -50,6 +50,7 @@ import display as LCD
 import analog as LDR
 import dht11 as DHT
 import camera
+import settings
 
 init_color = 0x000000
 sampling_color = wsut.pwm_color_hilight1
@@ -123,7 +124,7 @@ def take_sample(flashLED = False):
         LED.setColor(sampling_color)
     samptime = datetime.datetime.now()
     samptime_utc = datetime.datetime.utcnow()
-    L = LDR.sample()
+    L = LDR.readLDR()
     (T, P) = barometer.sample()
     (H, Tx) = DHT.sample() # may take seconds!
     outputLCD(T, P, H, L, Tx)
@@ -139,9 +140,13 @@ def run():
     #print T, P, H, L
     #print samptime_utc
     saveDataSQL(T, P, H, L, samptime_utc)
-    LED.setColor(cam_color)
-    camera.take_snapshot(wsut.image_filename, preview_delay=0, alpha=0)
-    LED.setColor(init_color)
+    thL = int(settings.get("CameraLightThreshold"))
+    #print "Light threshold", thL, "light", L
+    if L >= thL:
+        # Only take the snapshot if you can see anything
+        LED.setColor(cam_color)
+        camera.take_snapshot(wsut.image_filename, preview_delay=0, alpha=0)
+        LED.setColor(init_color)
     close()
 
 if __name__ == "__main__":
