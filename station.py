@@ -49,54 +49,18 @@ column_descriptions = [
 # Also note the use of data subscripting in the data row template. This allows me to pass the entire reading at once.
 #
 template_filename = "template.main.txt"
-template_string = '''
-<html>
-    <head>
-        <title>{sname}</title>
-        <link rel="stylesheet" type="text/css" href="{project}.css">
-        <script src="{project}.js"></script>
-    </head>
-    <body>
-        <h1>Sensor Output from {sname}</h1>
-        <p class="notes">NOTE: Scroll down for data below image.</p>
-        <div class="imgdiv">
-            <img src="ws_image.jpg" alt="Image Snapshot by Weather Station Camera" >
-        </div>
-        <p><table class="datatable">
-            <tr class="dataheadrow">
-                {header_columns}
-            </tr>
-        {data_rows}
-        </table></p>
-        <p><div class="tooltip">
-        	<button class="btn info" onclick="add_new()">Take Measurement</button>
-            <span class="tooltiptext">Take a new measurement (TBD)</span>
-        </div></p>
-        <p><div class="status"><span id="comstat">COMM STATUS: </span><span id="status">Offline.</span></div></p>
-        <footer>Design: Michael L. Mehr, Gil Garcia (C) 2017</footer>
-    </body>
-</html>
-'''
+template_string = ""
 
 headercol_filename = "template.hdrcol.txt"
-headercol_string = '''\
-                <td><div class="tooltip">{name}<span class="tooltiptext">{tooltip}</span></div></td>
-'''
+headercol_string = ""
 
 datarow_filename = "template.datarow.txt"
-datarow_string = '''\
-            <tr class="datarow" id="datarow{num}" onmouseover="highlight('datarow{num}')" onmouseout="reset('datarow{num}')">
-                <td>{data[0]}</td>
-                <td>{data[1]}</td>
-                <td>{data[2]}</td>
-                <td>{data[3]}</td>
-                <td>{data[4]}</td>
-            </tr>
-'''
+datarow_string = ""
 
 def merge_data(template_str, input_data, header_data):
     # Table metadata: get the names of the columns and their tooltips from a list (rather than hard-coding in the template)
     hdr_cols = ""
+    global template_string, headercol_string, datarow_string
     for hdrcol in header_data:
         hdr_cols += headercol_string.format(name=hdrcol['name'], tooltip=hdrcol['tip'])
     # Table data: get the data rows from a dynamic list of reading triplets (each of which are lists of 3 readings as strings)
@@ -122,10 +86,12 @@ def read_data(fname):
 def read_template(fname):
     ifile = open(fname, "r")
     data = ifile.read()
+    #print fname, data
     return data
 
 def read_dbdata(dbname):
     #dbname = wsut.database_filename
+    output_data = []
     try:
         conn = sqlite3.connect(dbname)
         #print "Opened database", dbname
@@ -136,29 +102,22 @@ def read_dbdata(dbname):
         #    data = [T,P,H,L,Ts]
         #    #print "...Appending =>", data
         #    output_data += [data]
-        # print "Final JSON creation with =>", json_data
-        return output_data
+        #print "Final JSON creation with =>", output_data
     except:
         e = sys.exc_info()[0]
-        print 'Error on database extraction: %s' % e
-        return []
-    finally:
-        #print "Closing database ", dbname
-        conn.close()
+        #print 'Error on database extraction: %s' % e
+    #print "Closing database ", dbname
+    conn.close()
+    return output_data
 
 def main():
+    global sensor_data
     #sensor_data = read_data(wsut.data_filename)
+    global template_string, headercol_string, datarow_string
     sensor_data = read_dbdata(wsut.database_filename)
     template_string = read_template(template_filename)
     headercol_string = read_template(headercol_filename)
     datarow_string = read_template(datarow_filename)
-    #print sensor_data
-    ##    print "Main INDEX Template:"
-    ##    print template_string
-    ##    print "Header Column Template:"
-    ##    print headercol_string
-    ##    print "Datarow Template:"
-    ##    print datarow_string
     output_html = merge_data(template_string, sensor_data, column_descriptions)
     output_data(wsut.html_filename, output_html)
 
