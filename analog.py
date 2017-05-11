@@ -16,6 +16,9 @@ A1 = 1
 A2 = 2
 A3 = 3
 
+min_voltage = 0
+max_voltage = 255
+
 ldr_pin = A0
 
 def setup():
@@ -26,6 +29,15 @@ def sample(pin = ldr_pin):
     ''' Return voltage as int 0-255 '''
     sample = ADC.read(pin)
     return sample
+
+def convertLDR(voltage):
+    ''' Returns a number that increases for increasing light levels. '''
+    return max_voltage - voltage
+
+def readLDR():
+    ss = sample(ldr_pin)
+    value = convertLDR(ss)
+    return value
 
 def cleanup():
     return
