@@ -40,7 +40,7 @@ function api_call(route, method, body) {
         if (this.status == 200) {
           status_cell.innerHTML = this.responseText;
         } else {
-          status_cell.innerHTML = "ERROR: " + this.status;
+          status_cell.innerHTML = "ERROR:" + this.responseText;
         }
       }
     };
@@ -50,20 +50,13 @@ function api_call(route, method, body) {
 }
 
 function add_new() {
-    // modified API to bypass CORS restrictions
-    device_id = document.getElementById("dvcid").value;
-    console.log("API:sensors DVCID:"+device_id);
-    return api_call("/sensors/"+device_id, "GET", "");
+    return api_call("/sensors", "GET", "");
 }
 
 function set_relay(onoff) {
-    // modified API to bypass CORS restrictions
-    device_id = document.getElementById("dvcid").value;
     if (onoff)
-      action = device_id + "\1";
+      action = "1";
     else
-      action = device_id + "\0";
-    cmd = "/led/0/"+action
-    console.log("API:"+cmd);
-    return api_call(cmd, "POST", "");
+      action = "0";
+    return api_call("/led/0/"+action, "POST", "");
 }

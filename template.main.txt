@@ -29,7 +29,6 @@
         	<button class="btn info" onclick="set_relay(0)">Relay OFF</button>
             <span class="tooltiptext">Set device OFF</span>
         </div>
-        <input type="hidden" id="dvcid" value="XHCROIu39875987SPjjjj39805">
         </div></p>
         <p><div class="status"><span id="comstat">COMM STATUS: </span><span id="status">Offline.</span></div></p>
         <footer>Design: Michael L. Mehr, Gil Garcia (C) 2017</footer>
