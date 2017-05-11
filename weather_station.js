@@ -20,16 +20,43 @@ function reset(tag) {
     sensor_cell.style.fontSize="100%";
 }
 
+// create cross-site route to weather-station RESTful API
+function get_api_route(route) {
+    hosturl_ = self.location.hostname
+    if (hosturl_ == "")
+        hosturl_ = "localhost";
+    hosturl = "http://" + hosturl_ +  ":8080/weather/api" + route;
+    console.log(hosturl);
+    return hosturl;
+}
+
 // click behavior for the "Take Measurement" button
-function add_new() {
-    // somewhat bogus behavior: toggles between empty and provided string
-    // This can probably be organized better as well. Separate spans for title and content make sense.
+function api_call(route, method, body) {
     status_cell = document.getElementById("status");
-    testc = status_cell.innerHTML[0]
-    if (testc == "W")
-    	status_cell.innerHTML = "Request cancelled. Offline.";
-    else if (testc == "R")
-    	status_cell.innerHTML = "Offline.";
+    status_cell.innerHTML = "Waiting for server response from measurement request...";
+    var xhttp = new XMLHttpRequest();
+    xhttp.onreadystatechange = function() {
+      if (this.readyState == 4) { 
+        if (this.status == 200) {
+          status_cell.innerHTML = this.responseText;
+        } else {
+          status_cell.innerHTML = "ERROR:" + this.responseText;
+        }
+      }
+    };
+    hosturl = get_api_route(route);
+    xhttp.open(method, hosturl, true);
+    xhttp.send(body);
+}
+
+function add_new() {
+    return api_call("/sensors", "GET", "");
+}
+
+function set_relay(onoff) {
+    if (onoff)
+      action = "1";
     else
-    	status_cell.innerHTML = "Waiting for server response from measurement request...";
+      action = "0";
+    return api_call("/led/0/"+action, "POST", "");
 }

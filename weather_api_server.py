@@ -13,18 +13,6 @@ import relay
 import camera
 from time import sleep
 
-# init flask instance
-app = Flask(__name__, static_url_path = "")
-
-#error handlers
-@app.errorhandler(400)
-def bad_request(error):
-    return make_response(jsonify( { 'error': 'Bad Request' } ), 400)
-
-@app.errorhandler(404)
-def not_found(error):
-    return make_response(jsonify( { 'error': 'Not Found' } ), 404)
-
 # Utilities
 def make_json_sample(temp, press, hum, light, tstamp):
     data = [
@@ -47,6 +35,24 @@ def make_json_sample(temp, press, hum, light, tstamp):
     ]
     return { "sensors": data, "timestamp": tstamp }
 
+def make_access_response(*args):
+    ''' Follow CSOR protocol for requests from port 80  '''
+    resp = make_response(*args)
+    resp.headers['Access-Control-Allow-Origin'] = '*'
+    return resp
+
+# init flask instance
+app = Flask(__name__, static_url_path = "")
+
+#error handlers
+@app.errorhandler(400)
+def bad_request(error):
+    return make_access_response(jsonify( { 'error': 'Bad Request' } ), 400)
+
+@app.errorhandler(404)
+def not_found(error):
+    return make_access_response(jsonify( { 'error': 'Not Found' } ), 404)
+
 # GET request handlers
 @app.route('/weather/api/sensors', methods = ['GET'])
 def get_sensors():
@@ -61,11 +67,11 @@ def get_sensors():
         ts = wsut.make_db_timestamp(sens_time)
         json_data = make_json_sample(sens_temp, sens_press, sens_hum, sens_light, ts)
         print "Measurement finished at ", wsut.make_local_timestamp(datetime.datetime.now())
-        return jsonify( json_data )
+        return make_access_response(jsonify( json_data ))
     except:
         e = sys.exc_info()[0]
         #print("Error on sensor sampling: %s" % e)
-        return jsonify({ 'error': 'Error on sensor sampling: %s' % e })
+        return make_access_response(jsonify({ 'error': 'Error on sensor sampling: %s' % e }))
     finally:
         sample.close()
 
@@ -96,11 +102,11 @@ def get_db_sensors(minutes=60):
             #print "...Appending =>", data
             json_data += [data]
         # print "Final JSON creation with =>", json_data
-        return jsonify( { 'results': json_data } )
+        return make_access_response(jsonify( { 'results': json_data } ))
     except:
         e = sys.exc_info()[0]
         #print("Error on database extraction: %s" % e)
-        return jsonify({ 'error': 'Error on database extraction: %s' % e })
+        return make_access_response(jsonify({ 'error': 'Error on database extraction: %s' % e }))
     finally:
         #print "Closing database ", dbname
         conn.close()
@@ -112,17 +118,20 @@ def set_led(lednum):
     TEST:
     curl -i -H "Content-Type: application/json" -X POST -d '{"action":1}' http://12.0.0.1:8080/weather/api/led/0
     '''
-    switch_status = "off"
-    
     if not request.json or not "action" in request.json:
         abort(400)
-    if lednum != 0:
-        return jsonify( { 'message': "Use of led not supported", 'status':-1, 'id': lednum } )
     action = request.json['action']
+    return set_led_cmd(lednum, action)
+
+@app.route('/weather/api/led/<int:lednum>/<int:action>', methods = ['POST'])
+def set_led_cmd(lednum, action):
+    if lednum != 0:
+        return make_access_response(jsonify( { 'message': "Use of led not supported", 'status':-1, 'id': lednum } ))
+    switch_status = "off"
     try:
         relay.setup()
         
-        if action != 0:
+        if action == 1 or action == '1':
             #turn on led
             relay.set(0xffffff)
             switch_status = "on"
@@ -130,10 +139,10 @@ def set_led(lednum):
             #turn off led
             relay.set(0)
             switch_status = "off"
-        return jsonify( { 'message': switch_status, 'status': 0, 'id': lednum } )
+        return make_access_response(jsonify( { 'message': switch_status, 'status': 0, 'id': lednum } ))
     except:
         e = sys.exc_info()[0]
-        return jsonify( { 'message': "Could not use led: e=%s" % e, 'status':-2, 'id': lednum } )
+        return make_access_response(jsonify( { 'message': "Could not use led: e=%s" % e, 'status':-2, 'id': lednum } ))
     finally:
         relay.cleanup()
 
@@ -157,7 +166,7 @@ def snap_cam(camnum):
         filename = "ws_image.jpg"
         capfilename = "/var/www/html/"+filename
     if camnum < 0 or camnum > 2:
-        return jsonify( { 'message': "Use of camera not supported", 'status':-1, 'id': camnum } )
+        return make_access_response(jsonify( { 'message': "Use of camera not supported", 'status':-1, 'id': camnum } ))
     cam_status = ""
     result = 0
     try:
@@ -179,10 +188,10 @@ def snap_cam(camnum):
                 cam_status = "Cannot capture image, camera in use."
             else:  #if result == -2: or anything else for that matter
                 cam_status = "Cannot capture image, camera error."
-        return jsonify( { 'message': cam_status, 'status': result, 'id': camnum } )
+        return make_access_response(jsonify( { 'message': cam_status, 'status': result, 'id': camnum } ))
     except:
         e = sys.exc_info()[0]
-        return jsonify( { 'message': "Could not use camera, e=%s" % e, 'status':-2, 'id': camnum } )
+        return make_access_response(jsonify( { 'message': "Could not use camera, e=%s" % e, 'status':-2, 'id': camnum } ))
     finally:
         if flash_led:
             LED.cleanup()

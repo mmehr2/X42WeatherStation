@@ -16,9 +16,19 @@
             </tr>
         {data_rows}
         </table></p>
-        <p><div class="tooltip">
+        <p><div>
+          <div class="tooltip">
         	<button class="btn info" onclick="add_new()">Take Measurement</button>
-            <span class="tooltiptext">Take a new measurement (TBD)</span>
+            <span class="tooltiptext">Take a new measurement</span>
+        </div>
+          <div class="tooltip">
+        	<button class="btn info" onclick="set_relay(1)">Relay ON</button>
+            <span class="tooltiptext">Set device ON</span>
+        </div>
+          <div class="tooltip">
+        	<button class="btn info" onclick="set_relay(0)">Relay OFF</button>
+            <span class="tooltiptext">Set device OFF</span>
+        </div>
         </div></p>
         <p><div class="status"><span id="comstat">COMM STATUS: </span><span id="status">Offline.</span></div></p>
         <footer>Design: Michael L. Mehr, Gil Garcia (C) 2017</footer>
