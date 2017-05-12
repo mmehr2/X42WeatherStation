@@ -6,6 +6,21 @@
     </head>
     <body>
         <h1>Sensor Output from {sname}</h1>
+        <p><div class="buttonrow">
+          <div class="tooltip">
+        	<button class="btn info" onclick="add_new()">Take Measurement</button>
+            <span class="tooltiptext">Take a new measurement</span>
+          </div>
+          <div class="tooltip">
+        	<button class="btn info" id="rlybtn" onclick="set_relay()">Device ON</button>
+            <span class="tooltiptext" id="rlytip">Turn device ON</span>
+          </div>
+          <div class="tooltip">
+        	<button class="btn info" onclick="cam_pic(0)">Take pic</button>
+            <span class="tooltiptext">Refresh cam img</span>
+          </div>
+        </div></p>
+        <p><div class="status"><span id="comstat">COMM STATUS: </span><span id="status">Offline.</span></div></p>
         <p class="notes">NOTE: Scroll down for data below image.</p>
         <div class="imgdiv">
             <img src="ws_image.jpg" alt="Image Snapshot by Weather Station Camera" >
@@ -16,21 +31,6 @@
             </tr>
         {data_rows}
         </table></p>
-        <p><div>
-          <div class="tooltip">
-        	<button class="btn info" onclick="add_new()">Take Measurement</button>
-            <span class="tooltiptext">Take a new measurement</span>
-        </div>
-          <div class="tooltip">
-        	<button class="btn info" onclick="set_relay(1)">Relay ON</button>
-            <span class="tooltiptext">Set device ON</span>
-        </div>
-          <div class="tooltip">
-        	<button class="btn info" onclick="set_relay(0)">Relay OFF</button>
-            <span class="tooltiptext">Set device OFF</span>
-        </div>
-        </div></p>
-        <p><div class="status"><span id="comstat">COMM STATUS: </span><span id="status">Offline.</span></div></p>
         <footer>Design: Michael L. Mehr, Gil Garcia (C) 2017</footer>
     </body>
 </html>
