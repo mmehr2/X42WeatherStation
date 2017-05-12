@@ -125,6 +125,7 @@ def set_led(lednum):
 
 @app.route('/weather/api/led/<int:lednum>/<int:action>', methods = ['POST'])
 def set_led_cmd(lednum, action):
+    # This version is for local XHTTP use (CORS-aware, cannot use JSON in body)
     if lednum != 0:
         return make_access_response(jsonify( { 'message': "Use of led not supported", 'status':-1, 'id': lednum } ))
     switch_status = "off"
@@ -150,21 +151,43 @@ def set_led_cmd(lednum, action):
 def snap_cam(camnum):
     '''
     TEST:
-    curl -i -H "Content-Type: application/json" -X POST -d '{"action":2,'led':1}' http://12.0.0.1:8080/weather/api/camera/0
+    curl -i -H "Content-Type: application/json" -X POST -d '{"action":1,'led':1}' http://12.0.0.1:8080/weather/api/camera/0
     '''
     if not request.json or not "action" in request.json:
         abort(400)
     action = request.json['action']
-    flash_led = True # since the LED might affect the image, we allow the user to turn it off
+    # NOTE: action is required; actions allowed:
+    # 0 - no pic taken (test function)
+    # 1 - take www pic replacement
+    # 2 - take pvt pic (requires download function)
+    led_ = 1
+    # NOTE: led is optional, default is flash
     if "led" in request.json:
-        led_ = request.json["led"]
-        if led_ == 0:
-            flash_led = False
-    filename = "ws_camimage.jpg"
-    capfilename = filename
-    if int(action) > 1:
-        filename = "ws_image.jpg"
-        capfilename = "/var/www/html/"+filename
+        led_ = int(request.json["led"])
+    action = (action << 1) + (led_ & 0x01)
+    return snap_cam_cmd(camnum, action)
+
+@app.route('/weather/api/camera/<int:camnum>/<int:action>', methods = ['POST'])
+def snap_cam_cmd(camnum,action):
+    '''
+    TEST:
+    curl -i -H "Content-Type: application/json" -X POST http://12.0.0.1:8080/weather/api/camera/0/3
+    '''
+    # This version is for local XHTTP use (CORS-aware, cannot use JSON in body)
+    # Accepted actions here:
+    # 0 - no flash, no pic
+    # 1 - flash led, no pic
+    # 2 - no flash, take www pic
+    # 3 - flash led, take www pic
+    # 4 - no flash, take pvt pic (need download function somehow tho)
+    # 5 - flash led, take pvt pic
+    flash_led = (action & 0x01) == 1 # since the LED might affect the image, we allow the user to turn it off
+    pure_action = action >> 1
+    filename = "ws_image.jpg"
+    capfilename = "/var/www/html/"+filename
+    if pure_action > 1:
+        filename = "ws_camimage.jpg"
+        capfilename = filename
     if camnum < 0 or camnum > 2:
         return make_access_response(jsonify( { 'message': "Use of camera not supported", 'status':-1, 'id': camnum } ))
     cam_status = ""
@@ -174,12 +197,13 @@ def snap_cam(camnum):
             LED.setup()
             LED.setColor(0xc000df)
         
-        if action != 0:
+        if pure_action != 0:
             resolution = (1024,768)
             if camnum == 1:
                 resolution = (2592, 1944)
             if camnum == 2:
                 resolution = (100, 100)
+            # TBD annotation?
             result = camera.take_snapshot(capfilename, preview_delay=0, alpha=0, resolution=resolution)
             if result == 0:
                 (x, y) = resolution
