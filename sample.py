@@ -7,9 +7,9 @@ Michael L. Mehr
 Sample.py - take one sample for the weather station and append to file
 This will be appropriate to call from cron on a regular basis (5 min for example).
 Sensors:
-1. Humidity via lesson 28 Humiture (DHT-11)
-2. Temperature via lesson 31 Barometer (BMP-180)
-3. Pressure via lesson 31 Barometer (BMP-180)
+1. Humidity via lesson 28 Humiture (DHT-11) [upgraded to BME-280]
+2. Temperature via lesson 31 Barometer (BMP-180) [upgraded to BME-280]
+3. Pressure via lesson 31 Barometer (BMP-180) [upgraded to BME-280]
 4. Ambient light via lesson 20 Photoresistor on lesson 13 PCF8591 ADC module
 
 Outputs:
@@ -48,13 +48,15 @@ import pwmled as LED
 import barometer
 import display as LCD
 import analog as LDR
-import dht11 as DHT
+#import dht11 as DHT
 import camera
 import settings
 
 init_color = 0x000000
 sampling_color = wsut.pwm_color_hilight1
 cam_color = wsut.pwm_color_background
+
+thL = 3
 
 def open():
     ''' Initialize all the hardware used for sampling.'''
@@ -65,11 +67,11 @@ def open():
     LCD.setup()
     LDR.setup()
     barometer.setup()
-    DHT.setup()
+    #DHT.setup()
 
 def close():
     ''' Clean up after hardware usage.'''
-    DHT.cleanup()
+    #DHT.cleanup()
     barometer.cleanup()
     LDR.cleanup()
     LCD.cleanup()
@@ -77,10 +79,10 @@ def close():
     # NEVER USE THIS FUNCTION - see WARNING in LED module for reasons.
     #GPIO.cleanup()
 
-def outputLCD(temp, press, humid, light, htemp):
+def outputLCD(temp, press, humid, light, lthreshold):
     ''' Format for 1602 display and send to output '''
     line1 = "T%1.1f P%1.3f" % (temp, press)
-    line2 = "H%1.1f L%d t%1.1f" % ( humid, light, htemp)
+    line2 = "H%1.1f L%d t%d" % ( humid, light, lthreshold)
     LCD.output(line1, line2)
     return
 
@@ -120,19 +122,21 @@ def take_sample(flashLED = False):
         tmu = sampling time as datetime object in UTC
         tm = sampling time similar but in local time
     '''
+    global thL
+    thL = int(settings.get("CameraLightThreshold")) 
     if flashLED:
         LED.setColor(sampling_color)
     samptime = datetime.datetime.now()
     samptime_utc = datetime.datetime.utcnow()
     L = LDR.readLDR()
-    (T, P) = barometer.sample()
-    (H, Tx) = DHT.sample() # may take seconds!
-    outputLCD(T, P, H, L, Tx)
+    (T, P, H) = barometer.sample()
+    outputLCD(T, P, H, L, thL)
     if flashLED:
         LED.setColor(init_color)
     return (T, P, H, L, samptime_utc, samptime)
 
 def run():
+    global thL
     open()
     X  = take_sample(flashLED = True)
     #print X
@@ -140,7 +144,6 @@ def run():
     #print T, P, H, L
     #print samptime_utc
     saveDataSQL(T, P, H, L, samptime_utc)
-    thL = int(settings.get("CameraLightThreshold"))
     #print "Light threshold", thL, "light", L
     if L >= thL:
         # Only take the snapshot if you can see anything

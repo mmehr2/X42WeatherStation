@@ -113,8 +113,8 @@ def read_dbdata(dbname):
 def main():
     global sensor_data
     #sensor_data = read_data(wsut.data_filename)
-    global template_string, headercol_string, datarow_string
     sensor_data = read_dbdata(wsut.database_filename)
+    global template_string, headercol_string, datarow_string
     template_string = read_template(template_filename)
     headercol_string = read_template(headercol_filename)
     datarow_string = read_template(datarow_filename)

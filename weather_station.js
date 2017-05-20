@@ -78,6 +78,8 @@ function add_new() {
 	    type_val = fround(type_val, 1);
 	  if (type_name == "pressure")
 	    type_val = fround(type_val, 2);
+	  if (type_name == "humidity")
+	    type_val = fround(type_val, 1);
 	  result += "<li>" + type_name + "=" + type_val + "</li>"
 	}
 	result += "</ul>";
