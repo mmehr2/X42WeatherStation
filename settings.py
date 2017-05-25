@@ -15,7 +15,7 @@ def get(keyname):
     ''' Retrieve a key's value. Returns empty string if no key of that name exists. '''
     dbname = wsut.database_filename
     global dberr
-    result = ""
+    result = "null"
     dberr = ""
     try:
         conn = sqlite3.connect(dbname)
@@ -34,12 +34,13 @@ def get(keyname):
         conn.close()
     return result
 
-def set(keyname, value, first=False):
+def setval(keyname, value, first=False):
     ''' Set a key's value. Exception error if no key of that name exists.
     To avoid exception on first-time creation, set first=True.
     '''
     global dberr
     dbname = wsut.database_filename
+    dberr = ""
     try:
         conn = sqlite3.connect(dbname)
         #print "Opened database", dbname
@@ -58,10 +59,10 @@ def set(keyname, value, first=False):
     finally:
         #print "Closing database ", dbname
         conn.close()
-    return
+    return dberr
 
 def create(keyname, value):
-    return set(keyname, value, first=True)
+    return setval(keyname, value, first=True)
 
 def getall(keyslike):
     ''' Retrieve a key's value. Returns empty string if no key of that name exists. '''
@@ -86,19 +87,40 @@ def getall(keyslike):
 
 if __name__=="__main__":
     print "Using 'settings' table of ", wsut.database_filename
-    # Create some defaults here to make this script useful.
-    sval = '128'
-    val = get('CameraLightThreshold')
-    print "Original CameraLightThreshold = ", val
-    if len(sys.argv) > 1:
-        sval = sys.argv[1]
-        set('CameraLightThreshold', sval)
-        val = get('CameraLightThreshold')
-        if val != sval:
-            print "Got value error creating CameraLightThreshold:<%s> from %s" % (val, sval)
+    # Usage
+    argc = len(sys.argv)
+    result = 0
+    if argc <= 1:
+        print "Usage:\tpython %s [keyname [new_value]]" % sys.argv[0]
+        print """\
+
+        Will report the value of key with name keyname, OR
+        If new_value is present, will set the key to the provided value.
+        Wildcards can be used in keyname (%, not *) unless new_value is present.
+        If keyname is '%', all values are shown.
+        """
+        # exit(result)
+    
+    # Implement usage.
+    kname = sys.argv[1] if argc > 1 else "%"
+    newval = sys.argv[2] if argc > 2 else "@&@&@"
+    if kname != "%":
+        result = get(kname)
+        #print "Test result =<" + result+ ">"
+    if newval != '@&@&@':
+        if result != "null":
+            result = setval(kname, newval)
+            if result == "":
+                print "Updated setting", kname, "=", newval
         else:
-            print "Properly set CameraLightThreshold to ", val
-    # Show what we've got now
-    contents = getall("%")
-    print "Current settings database:"
-    print contents
+            result = create(kname, newval)
+            if result == "":
+                print "Added new setting", kname, "=", newval
+            else:
+                print "Unable to add new setting", kname, "=", newval
+    contents = getall(kname)
+    print "Current values of settings:"
+    for line in contents:
+        (k,v) = line
+        print k + "=" + v
+    exit(0)
