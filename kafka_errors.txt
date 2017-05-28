@@ -1,0 +1,35 @@
+pi@mikesrpi:~/Documents/MyProjects/WeatherStation $ python ws*er.py
+Starting Apache Kafka Producer with the following configuration:
+Server requested: ec2-54-183-62-84.us-west-1.compute.amazonaws.com:9092 retries 3
+Traceback (most recent call last):
+  File "ws_cloud_sender.py", line 56, in <module>
+    result = init()
+  File "ws_cloud_sender.py", line 38, in init
+    value_serializer=lambda m: json.dumps(m).encode('ascii'))
+  File "/usr/local/lib/python2.7/dist-packages/kafka/producer/kafka.py", line 335, in __init__
+    **self.config)
+  File "/usr/local/lib/python2.7/dist-packages/kafka/client_async.py", line 210, in __init__
+    self.config['api_version'] = self.check_version(timeout=check_timeout)
+  File "/usr/local/lib/python2.7/dist-packages/kafka/client_async.py", line 809, in check_version
+    self._maybe_connect(try_node)
+  File "/usr/local/lib/python2.7/dist-packages/kafka/client_async.py", line 333, in _maybe_connect
+    conn.connect()
+  File "/usr/local/lib/python2.7/dist-packages/kafka/conn.py", line 241, in connect
+    self._init_host, self._init_port, ex
+socket.gaierror: getaddrinfo failed for ip-172-31-2-121.us-west-1.compute.internal:9092, exception was [Errno -2] Name or service not known. Is your advertised.listeners (called advertised.host.name before Kafka 9) correct and resolvable?
+
+pi@mikesrpi:~/Documents/MyProjects/WeatherStation $ python kafka_test.py
+Traceback (most recent call last):
+  File "kafka_test.py", line 12, in <module>
+    producer = KafkaProducer(bootstrap_servers=[default_server])
+  File "/usr/local/lib/python2.7/dist-packages/kafka/producer/kafka.py", line 335, in __init__
+    **self.config)
+  File "/usr/local/lib/python2.7/dist-packages/kafka/client_async.py", line 210, in __init__
+    self.config['api_version'] = self.check_version(timeout=check_timeout)
+  File "/usr/local/lib/python2.7/dist-packages/kafka/client_async.py", line 809, in check_version
+    self._maybe_connect(try_node)
+  File "/usr/local/lib/python2.7/dist-packages/kafka/client_async.py", line 333, in _maybe_connect
+    conn.connect()
+  File "/usr/local/lib/python2.7/dist-packages/kafka/conn.py", line 241, in connect
+    self._init_host, self._init_port, ex
+socket.gaierror: getaddrinfo failed for ip-172-31-2-121.us-west-1.compute.internal:9092, exception was [Errno -2] Name or service not known. Is your advertised.listeners (calledadvertised.host.name before Kafka 9) correct and resolvable?
