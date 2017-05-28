@@ -51,6 +51,7 @@ import analog as LDR
 #import dht11 as DHT
 import camera
 import settings
+import ws_cloud_sender as cloud
 
 init_color = 0x000000
 sampling_color = wsut.pwm_color_hilight1
@@ -68,6 +69,7 @@ def open():
     LDR.setup()
     barometer.setup()
     #DHT.setup()
+    cloud.init()
 
 def close():
     ''' Clean up after hardware usage.'''
@@ -101,7 +103,7 @@ def appendFile(fname, str):
 
 def saveDataSQL(temp, press, humid, light, utc_sample_time):
     # Create ISO8601 timestamp YYYY-MM-DDThh:mm:ssZ in UTC
-    #timestamp = "{0:%Y-%m-%dT%H:%M:%SZ}".format(utc_sample_time)
+    #timestamp = "%sZ" % utc_sample_time.isoformat()
     try:
         conn = sqlite3.connect(wsut.database_filename)
         curs = conn.cursor()
@@ -111,6 +113,21 @@ def saveDataSQL(temp, press, humid, light, utc_sample_time):
     except:
         e = sys.exc_info()[0]
         print("Error on database insertion: %s" % e)
+
+def make_json(temp, press, humid, light, utc_sample_time):
+    result = {\
+        "temperature": temp,
+        "pressure": press,
+        "humidity": humid,
+        "ambient_light": light,
+        "timestamp": "%sZ" % utc_sample_time.isoformat()\
+        }
+    return result
+
+def sendDataCloud(temp, press, humid, light, stime):
+    data = make_json(temp, press, humid, light, stime)
+    msg = cloud.package(data)
+    cloud.send(msg)
 
 def take_sample(flashLED = False):
     ''' Do the sampling, return the results.
@@ -144,6 +161,7 @@ def run():
     #print T, P, H, L
     #print samptime_utc
     saveDataSQL(T, P, H, L, samptime_utc)
+    sendDataCloud(T, P, H, L, samptime_utc)
     #print "Light threshold", thL, "light", L
     if L >= thL:
         # Only take the snapshot if you can see anything
