@@ -21,8 +21,8 @@ from kafka.errors import KafkaError
 default_port = 9092
 default_host = 'ec2-54-149-164-98.us-west-2.compute.amazonaws.com'
 default_retries = 3
-#default_topic = "iotmsgs"
-default_topic = "x42ws.public.data"
+default_topic = "iotmsgs"
+#default_topic = "x42ws.public.data"
 
 def init():
     global producer, port, host, retries
@@ -56,19 +56,6 @@ def send(data, topic = default_topic):
         result = "Kafka Producer Send Error %s" % e
     return result
 
-def package(data):
-    '''Takes a JSON data object as a Python dictionary. Wraps it in the proper headers.'''
-    result = {\
-          "guid": "0-ZZZ123456785B",\
-          "destination": "0-AAA12345678",\
-          "eventTime": "%sZ" % (datetime.datetime.utcnow().isoformat()),\
-          "payload": {\
-             "format": "urn:com:azuresults:x42ws:sensors",\
-             "data": data \
-           }\
-        }
-    return result
-
 if __name__=='__main__':
     global port, host, retries
     print "Starting Apache Kafka Producer with the following configuration:"
@@ -79,8 +66,7 @@ if __name__=='__main__':
     if result != "":
         print "Could not start producer: result:", result
         exit(255)
-    data = {"test1": 12, "test2": 34}
-    message = package(data)
+    message = {"test1": 12, "test2": 34}
     print "Sending message X to topic:", default_topic, " X:", json.dumps(message)
     result = send(message)
     print "Result of test send was :", result

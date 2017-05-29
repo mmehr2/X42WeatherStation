@@ -12,6 +12,8 @@ image_filename = "ws_image.jpg"
 data_filename = "sensors.dat"
 html_filename = "index.html"
 database_filename = 'weather_station.db'
+data_topic_name = 'x42ws.public.data'
+command_topic_name = 'x42ws.public.commands'
 
 # Website color scheme inspired by a web article
 '''

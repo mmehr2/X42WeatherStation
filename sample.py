@@ -52,6 +52,7 @@ import analog as LDR
 import camera
 import settings
 import ws_cloud_sender as cloud
+import cloud_formatters as cfmt
 
 init_color = 0x000000
 sampling_color = wsut.pwm_color_hilight1
@@ -114,20 +115,9 @@ def saveDataSQL(temp, press, humid, light, utc_sample_time):
         e = sys.exc_info()[0]
         print("Error on database insertion: %s" % e)
 
-def make_json(temp, press, humid, light, utc_sample_time):
-    result = {\
-        "temperature": temp,
-        "pressure": press,
-        "humidity": humid,
-        "ambient_light": light,
-        "timestamp": "%sZ" % utc_sample_time.isoformat()\
-        }
-    return result
-
 def sendDataCloud(temp, press, humid, light, stime):
-    data = make_json(temp, press, humid, light, stime)
-    msg = cloud.package(data)
-    cloud.send(msg)
+    msg = cfmt.package_x42(temp, press, humid, light, stime)
+    cloud.send(msg, topic = wsut.data_topic_name)
 
 def take_sample(flashLED = False):
     ''' Do the sampling, return the results.
