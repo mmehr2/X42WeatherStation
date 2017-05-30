@@ -16,7 +16,7 @@ import json
 import datetime
 
 from kafka import KafkaProducer
-from kafka.errors import KafkaError
+#from kafka.errors import KafkaError
 
 default_port = 9092
 default_host = 'ec2-54-149-164-98.us-west-2.compute.amazonaws.com'
@@ -42,7 +42,7 @@ def init():
         producer = KafkaProducer(bootstrap_servers=[server1],\
                                  retries=retries,\
                                  value_serializer=lambda m: json.dumps(m).encode('ascii'))
-    except KafkaError as e:
+    except Exception as e:
         result = "Kafka Producer Init Error %s" % e
     return result
 
@@ -52,7 +52,7 @@ def send(data, topic = default_topic):
     try:
         producer.send(topic, data) # returns an async future
         producer.flush() # block until all async messages are sent
-    except KafkaError as e:
+    except Exception as e:
         result = "Kafka Producer Send Error %s" % e
     return result
 
