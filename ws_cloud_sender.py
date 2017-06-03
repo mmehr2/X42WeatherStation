@@ -15,6 +15,10 @@ import settings as dbs
 import json
 import datetime
 
+import cloud_batch as cbat
+import random
+import utilities as wsut
+
 from kafka import KafkaProducer
 #from kafka.errors import KafkaError
 
@@ -66,8 +70,39 @@ if __name__=='__main__':
     if result != "":
         print "Could not start producer: result:", result
         exit(255)
-    message = {"test1": 12, "test2": 34}
-    print "Sending message X to topic:", default_topic, " X:", json.dumps(message)
-    result = send(message)
-    print "Result of test send was :", result
+    #message = {"test1": 12, "test2": 34}
+    #print "Sending message X to topic:", default_topic, " X:", json.dumps(message)
+    #result = send(message)
+    #print "Result of test send was :", result
+    # Send a random number of data sample messages (up to CloudSendBatchSize)
+    start = dbs.get("CloudSendLastRowid")
+    if start == "null":
+        start = 1
+        dbs.create("CloudSendLastRowid", start)
+    else:
+        start = int(start)
+    max_size = dbs.get("CloudSendBatchSize")
+    if max_size == "null":
+        max_size = 10
+    else:
+        max_size = int(max_size)
+    size1 = max_size/2
+    size2 = max_size
+    random.seed()
+    size = random.randint(size1, size2)
+    end = start + size -1
+    next = end + 1
+    dbcount = cbat.read_sample_count()
+    if end > dbcount:
+        end = dbcount
+        next = 1
+        size = end - start + 1
+    print "Sending the next", size, "samples", "(%d:%d)" % (start, end), "to the cloud."
+    json_message = cbat.get_json_samples(start, end)
+    result = send(json_message, topic = wsut.data_topic_name)
+    if result == "":
+        # successful send, OK to update the settings values
+        dbs.setval("CloudSendLastRowid", next)
+        print "Updated next row to send to", next
+    
     exit(0)

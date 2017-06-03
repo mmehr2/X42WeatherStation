@@ -1,10 +1,3 @@
-The following is the output of the command:
-	sudo crontab -l
-NOTES:
-Mods are made by running sudo crontab -e
-This is the helpful crontab generator link:
-	http://www.crontab-generator.org/
------------ cut here -----------
 # Edit this file to introduce tasks to be run by cron.
 # 
 # Each task to run has to be defined through a single line
@@ -30,4 +23,6 @@ This is the helpful crontab generator link:
 #
 # MLMehr: added weather station capture every 5 minutes (comment out line to disable)
 */5 * * * * sudo takeWeatherSample >/dev/null 2>&1
+# MLMehr: added weather station simulated capture every 1 minutes (comment out line to disable)
+* * * * * sudo takeSimWeatherSample >/dev/null 2>&1
 

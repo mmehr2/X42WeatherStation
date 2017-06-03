@@ -18,7 +18,7 @@ def package(data):
           "destination": "0-AAA12345678",\
           "eventTime": "%sZ" % (datetime.datetime.utcnow().isoformat()),\
           "payload": {\
-             "format": "urn:com:azuresults:x42ws:sensors:v1",\
+             "format": "urn:com:azuresults:x42ws:sensors",\
              "data": data \
            }\
         }
@@ -28,3 +28,9 @@ def package_x42(temp, press, humid, light, utc_sample_time):
     data = make_json_x42(temp, press, humid, light, utc_sample_time)
     msg = package(data)
     return msg
+
+def package_x42list(sample):
+    (temp, press, humid, light, utc_sample_time) = sample
+    return package_x42(temp, press, humid, light, utc_sample_time)
+
+    
