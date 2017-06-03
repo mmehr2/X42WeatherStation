@@ -1,0 +1,5 @@
+#!/bin/bash
+
+cd /home/pi/Documents/MyProjects/WeatherStation
+
+python ws_cloud_sender.py
