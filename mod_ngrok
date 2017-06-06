@@ -1,0 +1,22 @@
+#!/bin/bash
+
+cd /home/pi/Documents/MyProjects/WeatherStation
+
+echo "Start the ngrok server:"
+echo "   ngrok start demo rest-api"
+echo "Then copy the hex codes for the two servers on localhost ports 80 and 8080 here:"
+echo "   $0 port-80-code port-8080-code"
+echo "The script will modify the weather_station.js file accordingly before copying it to the website /var/www/html."
+echo "It will also send an email with links to these addresses to the email address(es) specified in the settings database."
+
+if [ ! -z $2 ]
+  then
+    echo "Modifying production javascript file for REST api address https://$2.ngrok.io."
+    sed -e "s/\"[0-9a-f]*\.ngrok\.io/\"$2.ngrok.io/" weather_station.js > /var/www/html/weather_station.js
+
+  if [ ! -z $1 ]
+    then
+      echo "Running python email script for ngrok webserver address https://$1.ngrok.io."
+      python send_email.py $1 $2
+  fi
+fi

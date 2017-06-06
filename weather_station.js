@@ -23,9 +23,11 @@ function reset(tag) {
 // create cross-site route to weather-station RESTful API
 function get_api_route(route) {
     hosturl_ = self.location.hostname
-    if (hosturl_ == "")
-        hosturl_ = "localhost";
-    hosturl = "http://" + hosturl_ +  ":8080/weather/api" + route;
+    if (hosturl_ == "" || hosturl_ == "localhost")
+        hosturl_ = "localhost:8080";
+    if (hosturl_.lastIndexOf("ngrok.io") != -1)
+	hosturl_ = "97a0a7a3.ngrok.io" // this will change - how to persist it?
+    hosturl = "http://" + hosturl_ +  "/weather/api" + route;
     console.log(hosturl);
     return hosturl;
 }
@@ -117,6 +119,8 @@ function cam_pic(type) {
     action = "/camera/"+String(type)+"/3"; // med.res, flash, www pic
     callback = function(xo) {
 	if (xo.status != 200) return;
+	json = JSON.parse(xo.responseText)
+	if (json.status < 0) return;
 	console.log("Reloading page");
 	window.location.reload();
     }
