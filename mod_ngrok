@@ -12,7 +12,7 @@ echo "It will also send an email with links to these addresses to the email addr
 if [ ! -z $2 ]
   then
     echo "Modifying production javascript file for REST api address https://$2.ngrok.io."
-    sed -e "s/\"[0-9a-f]*\.ngrok\.io/\"$2.ngrok.io/" weather_station.js > weather_station2.js
+    sed -e "s/\"[0-9a-f]*\.ngrok\.io/\"$2.ngrok.io/" weather_station_template.js > weather_station2.js
     cp weather_station2.js /var/www/html/weather_station.js
 
   if [ ! -z $1 ]

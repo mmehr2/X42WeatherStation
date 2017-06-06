@@ -26,7 +26,7 @@ function get_api_route(route) {
     if (hosturl_ == "" || hosturl_ == "localhost")
         hosturl_ = "localhost:8080";
     if (hosturl_.lastIndexOf("ngrok.io") != -1)
-	hosturl_ = "97a0a7a3.ngrok.io" // this will change - how to persist it?
+	hosturl_ = "893639c5.ngrok.io" // this will change - how to persist it?
     hosturl = "http://" + hosturl_ +  "/weather/api" + route;
     console.log(hosturl);
     return hosturl;
