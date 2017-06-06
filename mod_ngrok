@@ -12,12 +12,14 @@ echo "It will also send an email with links to these addresses to the email addr
 if [ ! -z $2 ]
   then
     echo "Modifying production javascript file for REST api address https://$2.ngrok.io."
+    python settings.py Ngrok_API https://$2.ngrok.io/weather/api
     sed -e "s/\"[0-9a-f]*\.ngrok\.io/\"$2.ngrok.io/" weather_station_template.js > weather_station2.js
     cp weather_station2.js /var/www/html/weather_station.js
 
   if [ ! -z $1 ]
     then
       echo "Running python email script for ngrok webserver address https://$1.ngrok.io."
-      python send_email.py $1 $2
+      python settings.py Ngrok_Web https://$1.ngrok.io
+      python send_email.py $3
   fi
 fi
