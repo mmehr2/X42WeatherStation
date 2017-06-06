@@ -57,7 +57,7 @@ if __name__=="__main__":
         exit(0)
     init()
     body = get_ngrok_notice(wscode, restcode)
-    toaddr = "mmehr2@yahoo.com, mmehr2x-dev@yahoo.com"
+    toaddr = dbs.get('Ngrok_Mailto')
     subject = "New X42WS Addresses"
     print "Email to:", toaddr
     print "Email from:", fromaddr

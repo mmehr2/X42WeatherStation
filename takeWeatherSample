@@ -6,4 +6,7 @@ python sample.py
 
 python station.py
 
-cp index.html *.jpg *.*s /var/www/html
+cp index.html *.jpg *.css /var/www/html
+
+# Copy over the ngrok mods too
+cp weather_station2.js /var/www/html/weather_station.js
