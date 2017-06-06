@@ -27,7 +27,7 @@ def package(data):
           "eventTime": "%sZ" % (datetime.datetime.utcnow().isoformat()),\
           "payload": {\
              "format": "urn:com:azuresults:x42ws:sensors",\
-             "reply-to": "%s" % reply_url,\
+             "reply_to": "%s" % reply_url,\
              "data": data \
            }\
         }
