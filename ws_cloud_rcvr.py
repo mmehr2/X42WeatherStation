@@ -21,7 +21,7 @@ default_port = 9092
 default_host = 'ec2-54-149-164-98.us-west-2.compute.amazonaws.com'
 default_timeout = 10000 # msec
 default_topic = "iotmsgs"
-#default_topic = "x42ws.public.commands"
+default_topic = "x42ws.public.commands"
 
 def init(topic = default_topic):
     global consumer, port, host, timeout, topicname
@@ -35,6 +35,8 @@ def init(topic = default_topic):
         host = default_host
     if timeout == 'null':
         timeout = default_timeout
+    else:
+        timeout = int(timeout)
     server1 = '%s:%s' % (host, port)
     #print "Server requested:", server1
     result = ""
@@ -42,20 +44,29 @@ def init(topic = default_topic):
         consumer = KafkaConsumer(topic,\
                                  bootstrap_servers=[server1],\
                                  consumer_timeout_ms=timeout,\
-                                 auto_offset_reset='earliest',\
+                                 #group_id='x42ws',\
+                                 #auto_offset_reset='earliest',\
                                  value_deserializer=lambda m: json.loads(m.decode('ascii')))
     except Exception as e:
         result = "Kafka Consumer Init Error %s" % e
     return result
 
+def jdump(d):
+    return json.dumps(data, sort_keys=True, indent=4, separators=(',', ': '))
+                      
 def receive():
     global consumer
-    result = {}
+    result = []
     try:
+        consumer.poll()
         for msg in consumer:
             result += msg
+            print "Consumer added:", jdump(msg)
+        #consumer.commit()
     except Exception as e:
-        result += {"error": "Kafka Consumer Send Error %s" % e}
+        errorst = ("Kafka Consumer Receive Error %s" % e)
+        result += {"error": errorst}
+        print errorst
     return result
 
 if __name__=='__main__':
@@ -70,6 +81,5 @@ if __name__=='__main__':
         exit(255)
     print "Consumer awaiting messages on topic", topicname, ":"
     data = receive()
-    print "Data:", json.dumps(data, sort_keys=True,
-                              indent=4, separators=(',', ': '))
+    print "Data:", jdump(data)
     exit(0)
